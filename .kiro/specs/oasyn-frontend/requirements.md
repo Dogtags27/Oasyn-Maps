@@ -52,13 +52,14 @@ Modeled exposure and the estimated core temperature are shown as **modeled/illus
 
 #### R2 acceptance criteria
 
-1. THE SYSTEM SHALL implement a client with a mock mode (serving `backend/contract/fixtures`) and a live mode (calling the API), switchable by config/env.
-2. WHEN in mock mode THE SYSTEM SHALL show a `SAMPLE DATA` badge.
-3. THE SYSTEM SHALL attach a request id to each call and drop stale responses (keep only the latest per logical request).
-4. THE SYSTEM SHALL debounce slider input before issuing requests.
-5. THE SYSTEM SHALL load bands, ramp steps, limits, speeds, event sizes, caps, and countdown length from `/api/config` and reference no hardcoded threshold.
-6. WHEN the backend is unreachable THE SYSTEM SHALL show a notice and offer the clearly badged sample-data mode, never silently.
-7. THE SYSTEM SHALL mock the escalation reducer by looking up `fixtures/escalation.json` by `(state.phase, event.type)` and the caution/critical thresholds from config, for the sample walkthrough only.
+1. THE SYSTEM SHALL implement a client with a mock mode and a live mode (calling the API), switchable by config/env.
+2. THE SYSTEM SHALL ship a frontend-owned sample-data seed under `frontend/src/api/sample/` (one JSON per endpoint, schema-shaped, `kind: "sample"`) that mock mode uses so hour-1 work never blocks on the backend; WHEN `backend/contract/fixtures` exist (from backend task 3.3) mock mode SHALL prefer them and the local seed SHALL be kept only as a fallback.
+3. WHEN in mock mode THE SYSTEM SHALL show a `SAMPLE DATA` badge.
+4. THE SYSTEM SHALL attach a request id to each call and drop stale responses (keep only the latest per logical request).
+5. THE SYSTEM SHALL debounce slider input before issuing requests.
+6. THE SYSTEM SHALL load bands, ramp steps, limits, speeds, event sizes, caps, and countdown length from `/api/config` and reference no hardcoded threshold.
+7. WHEN the backend is unreachable THE SYSTEM SHALL show a notice and offer the clearly badged sample-data mode, never silently.
+8. THE SYSTEM SHALL mock the escalation reducer by looking up the sample escalation data by `(state.phase, event.type)` and the caution/critical thresholds from config, for the sample walkthrough only.
 
 ### R3 Visual system and tokens
 

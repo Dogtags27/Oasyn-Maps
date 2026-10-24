@@ -39,7 +39,8 @@ frontend/
       type.css       # font-face + :lang() stacks
     api/
       client.ts      # mock|live, request-id, debounce, stub/sample badge state
-      mock.ts        # serves contract/fixtures; escalation lookup by (phase, event, tc)
+      mock.ts        # prefers contract/fixtures, falls back to api/sample; escalation lookup by (phase, event, tc)
+      sample/        # frontend-owned sample-data seed, one JSON per endpoint (kind: "sample")
       types.ts       # re-exports contract schema types (z.infer)
     store/
       index.ts       # zustand root
@@ -82,9 +83,13 @@ frontend/
 - Each call carries an incrementing `requestId` per logical channel; responses with a stale id are dropped. Slider-driven calls are debounced (interval from config).
 - On a network failure (live), set an `unreachable` flag; the UI offers sample mode (badged), never silently swaps.
 
+`api/sample/` (frontend-owned sample-data seed):
+
+- One schema-shaped JSON per endpoint (`meta`, `config`, `presets`, `layers.*`, `plan`, `replan`, `body`, `escalation`, `coverage`, `departure`), each `kind: "sample"` with illustrative Back Bay / Northeastern geometry and "Sample ..." resource names. This is authored by Person B so mock mode works from minute one, before `backend/contract/fixtures` exist. It is validated against the contract `z.infer` types in `client.test.ts`.
+
 `api/mock.ts`:
 
-- Serves `backend/contract/fixtures/*.json`. For escalation, looks up a step by `(state.phase, event.type)` and whether `tcC` is at/above the caution/critical thresholds from config. Documented as sample-only; live is authoritative.
+- Resolves sample responses from `backend/contract/fixtures/*.json` when present (preferred), else from the local `api/sample/` seed (fallback), so the frontend is never blocked waiting on the backend. For escalation, looks up a step by `(state.phase, event.type)` and whether `tcC` is at/above the caution/critical thresholds from config. Documented as sample-only; live is authoritative. Once backend fixtures land, they take precedence automatically.
 
 `config/`:
 
@@ -177,7 +182,7 @@ Escalation stepping: the frontend posts `/api/escalation/step` with `(state, tcU
 
 ## 16. Testing strategy (vitest + testing-library)
 
-- `client.test.ts`: mock/live switch; stale-response dropping by request id; debounce.
+- `client.test.ts`: mock/live switch; stale-response dropping by request id; debounce; every `api/sample/` seed file validates against its contract `z.infer` type; mock mode prefers `backend/contract/fixtures` over the seed when both exist.
 - `i18n.test.ts`: parity with `en`; plural forms for en/es/it, other-only for zh/ja; every backend message key exists in `en.json`.
 - Component tests: `OfferCard` (Accept switches, Not now snoozes), `CriticalDialog` (local countdown from `deadlineMs`, reduced-motion ring), `DispatchSim` (no network call, permanent banner), `RouteLayer` (tick pattern on high-heat segments), `SegmentedControl` (keyboard).
 - a11y smoke: one `h1` per page, directions list present for a selected route, focus ring visible, 360px no horizontal scroll.

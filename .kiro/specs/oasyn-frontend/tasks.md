@@ -2,6 +2,8 @@
 
 Person B edits `frontend/` only. Person B never edits `backend/` (including `backend/contract/`, which Person A owns); the frontend consumes the contract. Person B starts on mock data at hour 1 and flips to live at the checkpoints. Each task is incremental, builds on the previous ones, and ends with tests green.
 
+Sample data: because `backend/contract/fixtures` may not exist yet when frontend work starts, Person B authors a frontend-owned sample-data seed under `frontend/src/api/sample/` (task 4.2). Mock mode prefers the backend fixtures when they exist and falls back to this seed otherwise, so hour-1 work is never blocked. The seed is schema-shaped and validated against the contract types.
+
 Hard rules baked into every task: no user-facing string literals in components (use `t()`), no colour outside the `@theme` tokens, no threshold hardcoded (read `/api/config`), no emojis, sentence case. Enforced by `jsx-no-literals`, the no-hex check, `lint:content`, and `i18n:check`.
 
 Tiers: **T1** = demo cannot run without it. **T2** = coverage, departure, polish. **T3** = stretch. Never cut: contract-driven rendering, escalation UI, offers-not-forced, i18n plumbing, accessibility basics, privacy page.
@@ -28,11 +30,13 @@ Tiers: **T1** = demo cannot run without it. **T2** = coverage, departure, polish
 
 - [ ] 4. API client with mock mode
   - [ ] 4.1 `api/types.ts` re-exporting contract schema types via `z.infer`; `api/client.ts` with mock|live switch, request-id staleness dropping, and debounce.
-    - _Requirements: R2.1, R2.3, R2.4_
-  - [ ] 4.2 `api/mock.ts` serving `backend/contract/fixtures`; escalation lookup by `(phase, event, tc)`; set the `SAMPLE DATA` badge in mock mode.
-    - _Requirements: R2.2, R2.7_
-  - [ ] 4.3 Load `/api/config` at boot into the store; add typed `config/` accessors so no threshold is hardcoded; unreachable-backend notice + badged sample-mode offer.
-    - _Requirements: R2.5, R2.6, R1.4_
+    - _Requirements: R2.1, R2.4, R2.5_
+  - [ ] 4.2 Author the frontend-owned sample-data seed under `frontend/src/api/sample/` — one schema-shaped `kind: "sample"` JSON per endpoint (`meta`, `config`, `presets`, `layers.*`, `plan`, `replan`, `body`, `escalation`, `coverage`, `departure`) with illustrative Back Bay / Northeastern geometry and "Sample ..." resource names. Validate it against the contract `z.infer` types in a test. This unblocks all hour-1 frontend work before backend fixtures exist.
+    - _Requirements: R2.2_
+  - [ ] 4.3 `api/mock.ts`: resolve sample responses, preferring `backend/contract/fixtures` when present and falling back to the local `api/sample/` seed; escalation lookup by `(phase, event, tc)`; set the `SAMPLE DATA` badge in mock mode.
+    - _Requirements: R2.2, R2.3, R2.8_
+  - [ ] 4.4 Load `/api/config` at boot into the store; add typed `config/` accessors so no threshold is hardcoded; unreachable-backend notice + badged sample-mode offer.
+    - _Requirements: R2.6, R2.7, R1.4_
 
 - [ ] 5. i18n plumbing (from task 1, retrofitting is expensive)
   - [ ] 5.1 `i18n/t.ts` (`{var}` interpolation + `Intl.PluralRules`), `locales.ts` registry, `useLocale.ts`, `formatters.ts` (Intl number/date, C/F, metric/imperial).
@@ -96,7 +100,7 @@ Tiers: **T1** = demo cannot run without it. **T2** = coverage, departure, polish
 
 - [ ] 16. Flip the client to live `/api/plan` (Checkpoint 1)
   - Switch the plan channel to live; confirm every rendered value/sentence comes from the response (descriptors) and config (thresholds), not literals.
-  - _Requirements: R2.5, R5.8, R1.4_
+  - _Requirements: R2.6, R5.8, R1.4_
 
 ---
 
