@@ -26,6 +26,7 @@ import type { Snapshot } from "../snapshot.js";
 import { bbox, search as cfg } from "../config.js";
 import { LRU } from "../cache.js";
 import { loadLayerFeatures } from "./layers.js";
+import { campuses } from "./campuses.js";
 import { zodToApiError, sendError } from "./error.js";
 
 const isDev = process.env.NODE_ENV !== "production";
@@ -61,6 +62,9 @@ export function scoreName(nameNorm: string, q: string): number {
   return 0;
 }
 
+/** Curated campuses outrank everything local: they are what people mean. */
+const CAMPUS_BOOST = 8;
+
 const KIND_BOOST: Record<SearchKind, number> = {
   cooling: 4,
   place: 3,
@@ -89,6 +93,30 @@ function inBbox(lat: number, lng: number): boolean {
 interface IndexEntry {
   result: SearchResult;
   norm: string;
+  /** extra score (curated entries). */
+  boost?: number;
+  /** abbreviations ("bu", "mit") match only exactly, never as a prefix. */
+  exactOnly?: boolean;
+}
+
+/** One index entry per campus alias; merge() collapses them by id. */
+export function campusEntries(): IndexEntry[] {
+  const out: IndexEntry[] = [];
+  for (const c of campuses) {
+    const result: SearchResult = {
+      id: `campus:${c.id}`,
+      name: c.name,
+      detail: c.detail,
+      at: { lat: c.lat, lng: c.lng },
+      kind: "poi",
+      source: "local",
+    };
+    const names = new Set([normalise(c.name), ...c.aliases.map(normalise)]);
+    for (const norm of names) {
+      out.push({ norm, result, boost: CAMPUS_BOOST, exactOnly: norm.length <= 4 });
+    }
+  }
+  return out;
 }
 
 type Feature = {
@@ -122,7 +150,7 @@ function anchor(geom: Feature["geometry"]): { lat: number; lng: number } | null 
 }
 
 async function buildIndex(snap: Snapshot): Promise<IndexEntry[]> {
-  const out: IndexEntry[] = [];
+  const out: IndexEntry[] = campusEntries();
   const add = (
     layer: string,
     kind: SearchKind,
@@ -165,12 +193,21 @@ async function buildIndex(snap: Snapshot): Promise<IndexEntry[]> {
   return out;
 }
 
-function searchLocal(index: IndexEntry[], q: string, limit: number): Array<SearchResult & { score: number }> {
-  const hits: Array<SearchResult & { score: number }> = [];
+export function searchLocal(
+  index: IndexEntry[],
+  q: string,
+  limit: number,
+): Array<SearchResult & { score: number }> {
+  // Best score per result id (a campus has several alias entries).
+  const best = new Map<string, SearchResult & { score: number }>();
   for (const e of index) {
-    const s = scoreName(e.norm, q);
-    if (s > 0) hits.push({ ...e.result, score: s + KIND_BOOST[e.result.kind] });
+    const s = e.exactOnly ? (e.norm === q ? 100 : 0) : scoreName(e.norm, q);
+    if (s <= 0) continue;
+    const score = s + KIND_BOOST[e.result.kind] + (e.boost ?? 0);
+    const prev = best.get(e.result.id);
+    if (!prev || score > prev.score) best.set(e.result.id, { ...e.result, score });
   }
+  const hits = [...best.values()];
   hits.sort((a, b) => b.score - a.score || a.name.length - b.name.length);
   return hits.slice(0, limit);
 }
@@ -301,11 +338,12 @@ export function merge(local: SearchResult[], remote: SearchResult[], limit: numb
 export function makeSearchRoute(snapshot?: Snapshot) {
   let indexPromise: Promise<IndexEntry[]> | null = null;
   const index = (): Promise<IndexEntry[]> => {
-    if (!snapshot) return Promise.resolve([]);
+    // No snapshot: curated campuses still work (plus the geocoder).
+    if (!snapshot) return Promise.resolve(campusEntries());
     if (!indexPromise) {
       indexPromise = buildIndex(snapshot).catch(() => {
         indexPromise = null; // retry on the next request
-        return [];
+        return campusEntries();
       });
     }
     return indexPromise;

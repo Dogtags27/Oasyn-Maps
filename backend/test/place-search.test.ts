@@ -5,7 +5,14 @@
  */
 
 import { describe, it, expect, vi, afterEach } from "vitest";
-import { normalise, scoreName, fromPhoton, merge } from "../src/routes/search.js";
+import {
+  normalise,
+  scoreName,
+  fromPhoton,
+  merge,
+  campusEntries,
+  searchLocal,
+} from "../src/routes/search.js";
 import { SearchResponse, type SearchResult } from "../contract/schemas.js";
 
 const r = (over: Partial<SearchResult>): SearchResult => ({
@@ -80,6 +87,45 @@ describe("fromPhoton", () => {
       0,
     );
     expect(out).toBeNull();
+  });
+});
+
+describe("campus search", () => {
+  const index = campusEntries();
+  const top = (q: string) => searchLocal(index, normalise(q), 3)[0];
+
+  it.each([
+    ["Northeastern", "Northeastern University"],
+    ["NEU", "Northeastern University"],
+    ["bu", "Boston University"],
+    ["BC", "Boston College"],
+    ["MIT", "MIT (Massachusetts Institute of Technology)"],
+    ["harvard", "Harvard University (Harvard Yard)"],
+    ["tufts", "Tufts University"],
+    ["massachusetts institute", "MIT (Massachusetts Institute of Technology)"],
+  ])("%s -> %s", (q, name) => {
+    expect(top(q)?.name).toBe(name);
+  });
+
+  it("does not treat abbreviations as prefixes", () => {
+    // "bum" must not resolve to BU via the "bu" alias.
+    expect(searchLocal(index, normalise("bum"), 5).some((h) => h.id === "campus:bu")).toBe(false);
+  });
+
+  it("returns each campus once even when several aliases match", () => {
+    const hits = searchLocal(index, normalise("boston university"), 10);
+    expect(hits.filter((h) => h.id === "campus:bu")).toHaveLength(1);
+  });
+
+  it("keeps every campus inside the routable bbox", async () => {
+    const { bbox } = await import("../src/config.js");
+    for (const e of index) {
+      const { lat, lng } = e.result.at;
+      expect(lat).toBeGreaterThanOrEqual(bbox.south);
+      expect(lat).toBeLessThanOrEqual(bbox.north);
+      expect(lng).toBeGreaterThanOrEqual(bbox.west);
+      expect(lng).toBeLessThanOrEqual(bbox.east);
+    }
   });
 });
 

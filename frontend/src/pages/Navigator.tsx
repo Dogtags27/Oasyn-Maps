@@ -17,6 +17,7 @@ import { TreeLayer } from "@/map/TreeLayer";
 import { ParkLayer } from "@/map/ParkLayer";
 import { SafetyLayer } from "@/map/SafetyLayer";
 import { EndpointsLayer } from "@/map/EndpointsLayer";
+import { FitToTrip } from "@/map/FitToTrip";
 import { SunBadge } from "@/map/SunBadge";
 import { Legend } from "@/ui/Legend";
 import { DirectionsList } from "@/a11y/DirectionsList";
@@ -90,6 +91,7 @@ export function Navigator() {
             <OasisLayer />
             <RouteLayer />
             <EndpointsLayer />
+            <FitToTrip />
           </MapView>
           <SunBadge />
         </div>
