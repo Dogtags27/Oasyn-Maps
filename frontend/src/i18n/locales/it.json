@@ -109,6 +109,7 @@
   "route.metric.oases": "Refrigerio vicino",
   "route.explanationsTitle": "Perché questo percorso",
   "route.directionsTitle": "Indicazioni",
+  "route.recommended": "consigliata",
 
   "band.low": "bassa",
   "band.elevated": "elevata",
