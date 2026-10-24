@@ -36,8 +36,12 @@ export interface ResolvedScenario {
 export interface EnvScalars {
   /** s = max(0, sin(sunAltitude)). */
   s: number;
-  /** sun azimuth (radians). */
+  /** sun azimuth (radians, suncalc convention: 0 = south, +west). */
   azimuth: number;
+  /** sun altitude above the horizon (radians, negative below). Optional for hand-built test contexts. */
+  altitude?: number;
+  /** sun compass bearing, radians clockwise from north (0 = N, PI/2 = E). */
+  bearing?: number;
   /** solar intensity I in [0,1]. */
   I: number;
   /** thermal load theta in [0,1]. */

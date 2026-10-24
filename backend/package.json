@@ -15,6 +15,7 @@
     "typecheck": "tsc --noEmit",
     "fixtures": "tsx scripts/gen-fixtures.mjs",
     "build-data": "node scripts/build-data.mjs",
+    "bake-shade": "node scripts/bake-shade.mjs",
     "verify-snapshot": "node scripts/verify-snapshot.mjs",
     "perf-check": "tsx scripts/perf-check.mjs",
     "plan-cli": "tsx scripts/plan-cli.mjs",

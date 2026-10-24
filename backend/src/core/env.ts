@@ -20,16 +20,35 @@ import {
   T_lo,
   T_hi,
   sigmaMax,
+  sunRampDeg,
+  horizonShade,
 } from "../config.js";
 import type { EnvScalars, ResolvedScenario } from "./types.js";
 import type { Snapshot } from "../snapshot.js";
 
 const clamp01 = (x: number) => (x < 0 ? 0 : x > 1 ? 1 : x);
 
-/** Sun altitude factor s = max(0, sin(altitude)) and azimuth, from suncalc. */
-export function sun(timeMs: number, lat: number, lon: number): { s: number; azimuth: number } {
+const TWO_PI = Math.PI * 2;
+const RAD2DEG = 180 / Math.PI;
+
+/**
+ * Sun position from suncalc: altitude factor s = max(0, sin(altitude)), the raw
+ * altitude, the suncalc azimuth (0 = south, +west), and the compass bearing
+ * (clockwise from north) that the baked skyline is indexed by.
+ */
+export function sun(
+  timeMs: number,
+  lat: number,
+  lon: number,
+): { s: number; azimuth: number; altitude: number; bearing: number } {
   const pos = SunCalc.getPosition(new Date(timeMs), lat, lon);
-  return { s: Math.max(0, Math.sin(pos.altitude)), azimuth: pos.azimuth };
+  const bearing = (((pos.azimuth + Math.PI) % TWO_PI) + TWO_PI) % TWO_PI;
+  return { s: Math.max(0, Math.sin(pos.altitude)), azimuth: pos.azimuth, altitude: pos.altitude, bearing };
+}
+
+/** Direct-beam ramp in [0,1]: 0 at/below the horizon, 1 from sunRampDeg upward. */
+export function sunRamp(altitudeRad: number): number {
+  return clamp01((altitudeRad * RAD2DEG) / sunRampDeg);
 }
 
 /**
@@ -79,6 +98,11 @@ export function thermalLoad(appTemp: number): number {
   return clamp01((appTemp - T_lo) / (T_hi - T_lo));
 }
 
+/** Canopy shade sigma_c from tree density and park openness, [0,1]. */
+export function canopyShade(trees: number, park: number): number {
+  return clamp01(shadeWeights.a1 * (trees / featureNorm.n_t) + shadeWeights.a2 * park);
+}
+
 /**
  * Per-edge shade sigma as the probabilistic union of canopy shade sigma_c and
  * building shade sigma_b: sigma = 1 - (1 - sigma_c)(1 - sigma_b).
@@ -87,7 +111,7 @@ export function thermalLoad(appTemp: number): number {
  * Clamped to sigmaMax so H_min stays a valid lower bound.
  */
 export function edgeShade(trees: number, park: number, bldg: number, s: number): number {
-  const canopy = clamp01(shadeWeights.a1 * (trees / featureNorm.n_t) + shadeWeights.a2 * park);
+  const canopy = canopyShade(trees, park);
   // Low sun (small s) -> longer shadows -> more building shade. gain in [a3, 2*a3].
   const lowSunGain = shadeWeights.a3 * (1 + (1 - s));
   const building = clamp01(lowSunGain * (bldg / featureNorm.n_b));
@@ -108,20 +132,50 @@ export function heatMin(theta: number, I: number): number {
 
 /** Resolve the per-scenario environment scalars once. */
 export function resolveEnv(scenario: ResolvedScenario, center: { lat: number; lon: number }): EnvScalars {
-  const { s, azimuth } = sun(scenario.timeMs, center.lat, center.lon);
-  const I = solarIntensity(scenario.cloud, scenario.radiation);
+  const { s, azimuth, altitude, bearing } = sun(scenario.timeMs, center.lat, center.lon);
+  // Direct sun only exists when the sun is up: scale by the altitude ramp.
+  const I = solarIntensity(scenario.cloud, scenario.radiation) * sunRamp(altitude);
   const appTemp = apparentTemp(scenario.tempC, scenario.rh);
   const theta = thermalLoad(appTemp);
-  return { s, azimuth, I, theta, appTemp };
+  return { s, azimuth, altitude, bearing, I, theta, appTemp };
 }
 
 /**
  * Fill the snapshot's runtime `heat` array in O(E) for the given scenario (R3.7).
  * Mutates and returns snap.heat.
+ *
+ * With a baked skyline (snap.horizon) building shade is geometric: an edge is
+ * shaded to the degree the sun sits below the skyline in the sun's direction.
+ * Without one (older snapshots, hand-built test graphs) the legacy
+ * building-proximity count is used.
  */
 export function buildHeatArray(snap: Snapshot, env: EnvScalars): Float32Array {
   const { theta, I, s } = env;
   const heat = snap.heat;
+  const hz = snap.horizon;
+
+  if (hz && env.altitude !== undefined && env.bearing !== undefined) {
+    const { bins, quantDeg, data } = hz;
+    const altDeg = env.altitude * RAD2DEG;
+    const fbin = (env.bearing * RAD2DEG) / (360 / bins);
+    const fl = Math.floor(fbin);
+    const b0 = ((fl % bins) + bins) % bins;
+    const b1 = (b0 + 1) % bins;
+    const w = fbin - fl;
+    const w0 = (1 - w) * quantDeg;
+    const w1 = w * quantDeg;
+    const invSoft = 1 / (2 * horizonShade.softDeg);
+    for (let e = 0; e < snap.E; e++) {
+      const base = e * bins;
+      const skylineDeg = w0 * data[base + b0]! + w1 * data[base + b1]!;
+      const bShade = clamp01(0.5 + (skylineDeg - altDeg) * invSoft);
+      const canopy = canopyShade(snap.trees[e]!, snap.park[e]!);
+      const sigma = Math.min(sigmaMax, clamp01(1 - (1 - canopy) * (1 - bShade)));
+      heat[e] = edgeHeat(theta, I, sigma);
+    }
+    return heat;
+  }
+
   for (let e = 0; e < snap.E; e++) {
     const sigma = edgeShade(snap.trees[e]!, snap.park[e]!, snap.bldg[e]!, s);
     heat[e] = edgeHeat(theta, I, sigma);
