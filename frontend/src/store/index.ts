@@ -18,6 +18,7 @@ import type {
   LatLngT,
   ZoneT,
   EscalationStateT,
+  DescriptorT,
 } from "@/api/types";
 import { DEFAULT_LOCALE, resolveLocale } from "@/i18n/locales";
 import { readUid } from "@/privacy/uid";
@@ -72,6 +73,23 @@ export interface EscalationSlice {
   escalation: EscalationStateT;
 }
 
+/** A Lab event-log row (R7.4): trigger, decision, delta J, reason. */
+export interface EventLogEntry {
+  id: number;
+  /** i18n key for the trigger label (e.g. "lab.event.heatSpike"). */
+  triggerKey: string;
+  /** i18n key for the decision (e.g. "lab.decision.offered"). */
+  decisionKey: string;
+  /** change in rank cost J from the replan, if any. */
+  deltaJ: number | null;
+  /** a backend descriptor explaining the decision, if any. */
+  reason: DescriptorT | null;
+}
+
+export interface EventLogSlice {
+  eventLog: EventLogEntry[];
+}
+
 export interface AppSlice {
   config: ConfigResponseT | null;
   sampleMode: boolean;
@@ -86,6 +104,7 @@ export interface Store
     WalkerSlice,
     OffersSlice,
     EscalationSlice,
+    EventLogSlice,
     AppSlice {
   // prefs actions
   setLocale: (code: string) => void;
@@ -126,6 +145,10 @@ export interface Store
 
   // escalation actions
   setEscalation: (s: EscalationStateT) => void;
+
+  // event-log actions
+  logEvent: (entry: Omit<EventLogEntry, "id">) => void;
+  clearEventLog: () => void;
 
   // app actions
   setConfig: (c: ConfigResponseT) => void;
@@ -319,6 +342,14 @@ export const useStore = create<Store>((set, get) => {
     // escalation
     escalation: { phase: "normal" },
     setEscalation: (s) => set({ escalation: s }),
+
+    // event log
+    eventLog: [],
+    logEvent: (entry) =>
+      set((s) => ({
+        eventLog: [...s.eventLog, { ...entry, id: s.eventLog.length }],
+      })),
+    clearEventLog: () => set({ eventLog: [] }),
 
     // app
     config: null,

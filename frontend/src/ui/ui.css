@@ -167,3 +167,23 @@
   box-shadow: var(--shadow-offset) var(--shadow-offset) 0 var(--ink);
   padding: 20px;
 }
+
+.slider {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.slider__label {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-weight: 600;
+}
+.slider__value {
+  font-size: 15px;
+}
+.slider input[type="range"] {
+  width: 100%;
+  min-height: 44px;
+  accent-color: var(--ink);
+}
