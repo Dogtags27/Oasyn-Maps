@@ -24,7 +24,7 @@
     "paths": {
       "@contract/*": ["../backend/contract/*"],
       "@/*": ["src/*"],
-      "zod": ["./node_modules/zod"]
+      "zod": ["./node_modules/zod/index.d.cts"]
     },
     "types": ["vitest/globals", "@testing-library/jest-dom"]
   },
