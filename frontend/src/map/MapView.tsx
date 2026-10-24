@@ -1,8 +1,8 @@
 /**
  * map/MapView.tsx — the Leaflet base map (R4.1, R4.6, R13.3).
  *
- * Centred on Northeastern (from config), CARTO Positron tiles at the
- * --tile-opacity token (70% / 50% in Sun mode), keyboard enabled. If tiles fail
+ * Centred on Northeastern (from config), CARTO Voyager tiles at the
+ * --tile-opacity token (full / 50% in Sun mode), keyboard enabled. If tiles fail
  * to load we render the graph-derived fallback art so the area is never blank.
  * Child layer components receive the map through MapContext.
  */
@@ -37,6 +37,11 @@ export function MapView({ children, onMapClick }: MapViewProps) {
   const tilesFailed = useStore((s) => s.tilesFailed);
   const setTilesFailed = useStore((s) => s.setTilesFailed);
   const tileLayerRef = useRef<L.TileLayer | null>(null);
+  // Keep the latest click handler: the map is created once, so binding the
+  // first-render callback directly would freeze its closure (e.g. a stale
+  // "start" that makes every tap set the start, never the destination).
+  const onMapClickRef = useRef(onMapClick);
+  onMapClickRef.current = onMapClick;
 
   const cfg = viewConfig(config);
 
@@ -47,9 +52,12 @@ export function MapView({ children, onMapClick }: MapViewProps) {
       center: [cfg.center.lat, cfg.center.lon],
       zoom: 15,
       keyboard: true,
-      zoomControl: true,
+      // Zoom buttons are added below on the right, clear of the search pill.
+      zoomControl: false,
       attributionControl: true,
+      zoomSnap: 0.5,
     });
+    L.control.zoom({ position: "topright" }).addTo(m);
 
     const tiles = L.tileLayer(cartoTileUrl(), {
       attribution: CARTO_ATTRIBUTION,
@@ -61,11 +69,9 @@ export function MapView({ children, onMapClick }: MapViewProps) {
     tiles.addTo(m);
     tileLayerRef.current = tiles;
 
-    if (onMapClick) {
-      m.on("click", (e: L.LeafletMouseEvent) =>
-        onMapClick({ lat: e.latlng.lat, lng: e.latlng.lng }),
-      );
-    }
+    m.on("click", (e: L.LeafletMouseEvent) =>
+      onMapClickRef.current?.({ lat: e.latlng.lat, lng: e.latlng.lng }),
+    );
 
     setMap(m);
     return () => {

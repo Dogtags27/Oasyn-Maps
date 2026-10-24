@@ -62,10 +62,11 @@ export function DepartureTab() {
     <section className="lab-tab departure-tab" aria-label={t("departure.title")}>
       <h3>{t("departure.title")}</h3>
       <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} role="img" aria-label={t("departure.title")}>
-        <line x1={PAD} y1={H - PAD} x2={W - PAD} y2={H - PAD} stroke="var(--ink)" strokeWidth="1.5" />
-        <line x1={PAD} y1={PAD} x2={PAD} y2={H - PAD} stroke="var(--ink)" strokeWidth="1.5" />
-        <polyline points={line} fill="none" stroke="var(--ink)" strokeWidth="2" />
-        <line x1={bestX} y1={PAD} x2={bestX} y2={H - PAD} stroke="var(--necklace)" strokeWidth="2" />
+        <line x1={PAD} y1={H - PAD} x2={W - PAD} y2={H - PAD} stroke="var(--line)" strokeWidth="1.5" />
+        <line x1={PAD} y1={PAD} x2={PAD} y2={H - PAD} stroke="var(--line)" strokeWidth="1.5" />
+        <polyline points={line} fill="none" stroke="var(--violet)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+        <line x1={bestX} y1={PAD} x2={bestX} y2={H - PAD} stroke="var(--necklace)" strokeWidth="2.5" strokeDasharray="5 4" />
+        <circle cx={bestX} cy={PAD} r="5" fill="var(--necklace)" />
       </svg>
       <p className="departure-tab__best">
         {t("departure.best", {

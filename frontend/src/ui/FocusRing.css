@@ -1,7 +1,5 @@
 /* ui/FocusRing.css — a visible 3px focus ring everywhere (R13.3). */
-
 :where(a, button, input, select, textarea, [tabindex]):focus-visible {
-  outline: 3px solid var(--ink);
+  outline: 3px solid var(--primary);
   outline-offset: 2px;
-  border-radius: 4px;
 }

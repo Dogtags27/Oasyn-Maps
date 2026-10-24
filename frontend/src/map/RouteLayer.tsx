@@ -1,10 +1,10 @@
 /**
  * map/RouteLayer.tsx — route rendering (R4.2, R4.3, R16.4).
  *
- * Selected route: a 2px ink casing under a 7px colour line, drawn per segment
- * with the colour from the config ramp; high-heat segments also get a redundant
- * paper tick overlay (colour is never the sole signal). Alternatives render in
- * ink-2, dashed, 60% opacity. Exposure per segment is sampled from the route's
+ * Selected route: a soft shadow and white casing under a 7px colour line, drawn
+ * per segment with the colour from the config ramp; high-heat segments also get
+ * a redundant paper tick overlay (colour is never the sole signal). Alternatives
+ * render as a dotted soft-blue line on a white casing. Lines fade in on draw. Exposure per segment is sampled from the route's
  * aTrace — the frontend never recomputes it.
  */
 import { useEffect } from "react";
@@ -39,31 +39,54 @@ export function RouteLayer() {
     const cfg = viewConfig(config);
     const group = L.layerGroup().addTo(map);
 
-    const inkColor = resolveVar("var(--ink)");
-    const ink2Color = resolveVar("var(--ink-2)");
+    const casingColor = resolveVar("var(--route-casing)");
+    const shadowColor = resolveVar("var(--route-shadow)");
+    const altColor = resolveVar("var(--route-alt)");
     const paperColor = resolveVar("var(--paper)");
 
-    // Draw alternatives first so the selected route sits on top.
+    // Draw alternatives first so the selected route sits on top. Alternatives
+    // are a soft blue with a white casing (map-app style), dashed so they are
+    // distinguishable from the selection without relying on colour.
     for (const route of routes) {
       if (route.id === selectedId) continue;
-      L.polyline(route.geometry.map(toLatLng), {
-        color: ink2Color,
-        weight: 4,
-        opacity: 0.6,
-        dashArray: "6 8",
+      const latlngs = route.geometry.map(toLatLng);
+      L.polyline(latlngs, {
+        color: casingColor,
+        weight: 9,
+        opacity: 0.95,
+        className: "oasyn-route oasyn-route--alt",
+      }).addTo(group);
+      L.polyline(latlngs, {
+        color: altColor,
+        weight: 5,
+        opacity: 1,
+        dashArray: "1 9",
+        lineCap: "round",
+        className: "oasyn-route oasyn-route--alt",
       }).addTo(group);
     }
 
     const selected = routes.find((r) => r.id === selectedId);
     if (selected && selected.geometry.length >= 2) {
       const pts = selected.geometry;
-      // Ink casing under the whole route.
-      L.polyline(pts.map(toLatLng), {
-        color: inkColor,
-        weight: 11,
+      const latlngs = pts.map(toLatLng);
+      // Soft shadow + white casing under the whole route.
+      L.polyline(latlngs, {
+        color: shadowColor,
+        weight: 15,
         opacity: 1,
+        lineCap: "round",
+        lineJoin: "round",
+        className: "oasyn-route oasyn-route--shadow",
       }).addTo(group);
-
+      L.polyline(latlngs, {
+        color: casingColor,
+        weight: 12,
+        opacity: 1,
+        lineCap: "round",
+        lineJoin: "round",
+        className: "oasyn-route",
+      }).addTo(group);
       // Per-segment colour line.
       for (let i = 0; i < pts.length - 1; i++) {
         const frac = i / Math.max(1, pts.length - 2);
@@ -71,8 +94,14 @@ export function RouteLayer() {
         const band = rampBand(a, cfg.bands);
         const color = resolveVar(bandColorVar(band));
         const seg: [number, number][] = [toLatLng(pts[i]), toLatLng(pts[i + 1])];
-        L.polyline(seg, { color, weight: 7, opacity: 1 }).addTo(group);
-
+        L.polyline(seg, {
+          color,
+          weight: 7,
+          opacity: 1,
+          lineCap: "round",
+          lineJoin: "round",
+          className: "oasyn-route",
+        }).addTo(group);
         // Redundant paper tick overlay on high-heat segments (R16.4).
         if (isHighHeat(a, cfg.bands)) {
           L.polyline(seg, {
@@ -80,6 +109,7 @@ export function RouteLayer() {
             weight: 7,
             opacity: 1,
             dashArray: "2 10",
+            className: "oasyn-route",
           }).addTo(group);
         }
       }

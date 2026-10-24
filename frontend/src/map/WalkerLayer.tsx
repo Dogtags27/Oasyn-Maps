@@ -25,7 +25,7 @@ export function WalkerLayer() {
     const marker = L.marker([pos.lat, pos.lng], {
       icon: L.divIcon({
         html: walkerGlyph(),
-        className: "oasyn-glyph",
+        className: "oasyn-glyph oasyn-glyph--walker",
         iconSize: [28, 28],
         iconAnchor: [14, 14],
       }),

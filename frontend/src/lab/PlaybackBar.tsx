@@ -14,6 +14,7 @@ import { useReplan } from "@/api/useReplan";
 import { positionAt } from "./playback";
 import { Button } from "@/ui/Button";
 import { SegmentedControl } from "@/ui/SegmentedControl";
+import { Icon } from "@/ui/Icon";
 
 export function PlaybackBar() {
   const { t } = useLocale();
@@ -73,6 +74,7 @@ export function PlaybackBar() {
     <div className="playback-bar">
       <div className="playback-bar__transport">
         <Button variant="primary" onClick={() => setPlaying(!playing)} aria-pressed={playing}>
+          <Icon name={playing ? "pause" : "play"} size={18} filled />
           {playing ? t("lab.playback.pause") : t("lab.playback.play")}
         </Button>
         <SegmentedControl
@@ -88,6 +90,7 @@ export function PlaybackBar() {
           variant="secondary"
           onClick={() => void fireEvent("lab.event.heatSpike", { tempC: scenario.tempC + 4 })}
         >
+          <Icon name="heat" size={18} />
           {t("lab.event.heatSpike")}
         </Button>
         <Button
@@ -96,6 +99,7 @@ export function PlaybackBar() {
             void fireEvent("lab.event.hrSpike", { hr: (scenario.hr ?? 70) + 25 })
           }
         >
+          <Icon name="heart" size={18} />
           {t("lab.event.hrSpike")}
         </Button>
       </div>
