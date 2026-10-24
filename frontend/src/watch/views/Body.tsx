@@ -37,7 +37,7 @@ export function Body() {
         />
       </svg>
       <div className="watch-body__hr mono">
-        {hr !== undefined ? formatNumber(hr, locale) : "\u2014"}
+        {formatNumber(hr ?? baseline, locale)}
       </div>
       <div className="watch-body__base mono">
         {t("wearable.baseline")} {formatNumber(baseline, locale)}

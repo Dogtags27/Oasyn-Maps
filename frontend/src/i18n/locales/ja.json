@@ -154,6 +154,10 @@
   "watch.alert.reroute": "涼しい経路があります",
   "watch.alert.break": "涼み休憩を推奨します",
   "watch.haptic": "触覚：{pattern}",
+  "watch.face": "文字盤",
+  "watch.bpm": "BPM",
+  "watch.temp": "体温",
+  "watch.steps": "歩数",
 
   "lab.title": "ラボ",
   "lab.controls": "コントロール",

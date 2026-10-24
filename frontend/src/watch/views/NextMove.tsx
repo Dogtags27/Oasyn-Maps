@@ -48,7 +48,7 @@ export function NextMove() {
   const fmt: FormatOptions = { locale, tempUnit, distanceUnit };
 
   if (!route || route.turns.length === 0) {
-    return <div className="watch-view">{t("watch.nextMove")}</div>;
+    return <div className="watch-view watch-empty">{t("trip.whereTo")}</div>;
   }
 
   // The next turn is the first turn past the current progress.

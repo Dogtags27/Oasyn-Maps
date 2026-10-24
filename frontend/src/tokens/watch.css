@@ -1,20 +1,50 @@
 /*
- * tokens/watch.css — brightened tokens on black for the watch (R8.1).
+ * tokens/watch.css — watchOS-style tokens on black for the watch (R8.1).
  *
- * The watch renders on a black background; the ramp and text brighten so they
- * read on the small, dark canvas. Scoped to [data-watch] so it never leaks into
- * the phone UI.
+ * The watch renders on a true-black OLED canvas with the system accent colours
+ * and rounded type of a smartwatch face. The ramp and text brighten so they read
+ * on the small, dark canvas. Scoped to [data-watch] so it never leaks into the
+ * phone UI; the device case colours are scoped to the bezel.
  */
-
 [data-watch] {
   --watch-bg: #000000;
   --watch-text: #ffffff;
-  --watch-necklace: #4cc38a;
-  --watch-amber: #ffb020;
-  --watch-brick: #ff6a3d;
-  --watch-charles: #5ab8f0;
+  --watch-text-2: #8e8e93;
+  --watch-surface: #1c1c1e;
+  --watch-surface-2: #2c2c2e;
+  --watch-necklace: #30d158;
+  --watch-amber: #ff9f0a;
+  --watch-brick: #ff453a;
+  --watch-charles: #64d2ff;
+  --watch-blue: #0a84ff;
+  --watch-pink: #ff375f;
+  --watch-yellow: #ffd60a;
+  --watch-purple: #bf5af2;
+  --watch-move: #fa114f;
+  --watch-exercise: #a6ff00;
   --watch-ink: #ffffff;
-
+  --watch-track: rgba(255, 255, 255, 0.16);
+  --watch-red-track: rgba(255, 69, 58, 0.25);
+  --watch-amber-track: rgba(255, 159, 10, 0.25);
+  --watch-green-track: rgba(48, 209, 88, 0.25);
+  --font-watch: "SF Pro Rounded", "SF Compact Rounded", ui-rounded, -apple-system,
+    BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif;
+  --font-watch-text: "SF Compact Text", "SF Compact", -apple-system, BlinkMacSystemFont,
+    "Segoe UI", Roboto, system-ui, sans-serif;
   background: var(--watch-bg);
   color: var(--watch-text);
+  font-family: var(--font-watch-text);
+}
+
+/* Device case: brushed midnight aluminium, glass edge, crown and side button. */
+.watch-bezel {
+  --case-hi: #5b5f66;
+  --case-mid: #2b2e33;
+  --case-lo: #121316;
+  --case-edge: rgba(255, 255, 255, 0.18);
+  --crown-hi: #6b7079;
+  --crown-lo: #1a1b1f;
+  --crown-ridge: rgba(0, 0, 0, 0.45);
+  --crown-accent: #ff453a;
+  --glass-shine: rgba(255, 255, 255, 0.07);
 }

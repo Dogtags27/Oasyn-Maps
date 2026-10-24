@@ -154,6 +154,10 @@
   "watch.alert.reroute": "Cooler route available",
   "watch.alert.break": "Cooling break advised",
   "watch.haptic": "haptic: {pattern}",
+  "watch.face": "Watch face",
+  "watch.bpm": "BPM",
+  "watch.temp": "Temp",
+  "watch.steps": "Steps",
 
   "lab.title": "Lab",
   "lab.controls": "Controls",

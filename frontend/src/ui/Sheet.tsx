@@ -14,7 +14,7 @@ import "./ui.css";
 export type Snap = "peek" | "half" | "full";
 
 const ORDER: Snap[] = ["peek", "half", "full"];
-const PEEK_PX = 156;
+const PEEK_PX = 132;
 /** Space kept clear above a full sheet for the floating search bar. */
 const FULL_GAP_PX = 136;
 const HEIGHTS: Record<Snap, string> = {

@@ -154,6 +154,10 @@
   "watch.alert.reroute": "有更凉爽的路线可用",
   "watch.alert.break": "建议进行降温休息",
   "watch.haptic": "触感：{pattern}",
+  "watch.face": "表盘",
+  "watch.bpm": "BPM",
+  "watch.temp": "体温",
+  "watch.steps": "步数",
 
   "lab.title": "实验室",
   "lab.controls": "控件",

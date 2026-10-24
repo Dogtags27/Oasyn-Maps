@@ -96,7 +96,7 @@ export function Navigator() {
 
         <SearchBar />
 
-        <Sheet handleLabel={t("a11y.sheetHandle")} initial="half">
+        <Sheet handleLabel={t("a11y.sheetHandle")} initial="peek">
           <RoutePeek />
           {offers.length > 0 && (
             <section className="navigator__offers" aria-live="polite">

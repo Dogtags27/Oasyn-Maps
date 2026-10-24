@@ -205,7 +205,7 @@ a {
   justify-content: space-around;
   align-items: stretch;
   height: calc(var(--tabbar-h) + env(safe-area-inset-bottom));
-  padding: 6px 8px env(safe-area-inset-bottom);
+  padding: 4px 8px env(safe-area-inset-bottom);
   background: var(--grad-glass);
   backdrop-filter: saturate(180%) blur(16px);
   -webkit-backdrop-filter: saturate(180%) blur(16px);
@@ -219,8 +219,9 @@ a {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 2px;
+  gap: 1px;
   min-height: 48px;
+  line-height: 1.3;
   color: var(--ink-2);
   text-decoration: none;
   font-weight: 700;
@@ -240,8 +241,8 @@ a {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 60px;
-  height: 32px;
+  width: 56px;
+  height: 28px;
   border-radius: var(--radius-pill);
   transition:
     background-color var(--dur-2) var(--ease-out),
@@ -1095,7 +1096,7 @@ a {
   top: 128px;
 }
 .navigator .leaflet-bottom.leaflet-right {
-  bottom: 156px;
+  bottom: 132px;
 }
 .navigator__routes {
   display: flex;
@@ -2010,7 +2011,7 @@ a {
 }
 
 /* ======================================================================
- * Watch
+ * Watch (watchOS style)
  * ==================================================================== */
 
 .watch-page {
@@ -2025,37 +2026,97 @@ a {
 .watch-page > h1 {
   margin-bottom: 4px;
 }
+/* The watch page shows the device large, like a product shot. */
+.watch-page .watch-bezel {
+  zoom: 1.3;
+  margin: 64px auto 56px;
+}
+@media (min-width: 600px) {
+  .watch-page .watch-bezel {
+    zoom: 1.5;
+  }
+}
+
+/* Device: case, glass, crown, side button, and band stubs. */
 .watch-bezel {
   position: relative;
-  width: 236px;
-  padding: 18px;
-  margin: 24px auto;
-  border-radius: 54px;
-  background: linear-gradient(145deg, var(--ink-2) 0%, var(--ink) 55%);
-  box-shadow: var(--shadow-3), inset 0 0 0 2px var(--ink-2);
-  animation: float 5s ease-in-out infinite;
+  width: 232px;
+  padding: 14px;
+  margin: 64px auto;
+  border-radius: 58px;
+  background:
+    linear-gradient(160deg, var(--case-hi) 0%, var(--case-mid) 38%, var(--case-lo) 100%);
+  box-shadow:
+    var(--shadow-3),
+    inset 0 0 0 1.5px var(--case-edge),
+    inset 0 2px 6px var(--case-edge);
+  animation: float 6s ease-in-out infinite;
+  isolation: isolate;
 }
-.watch-bezel::after {
+.watch-bezel__band {
+  position: absolute;
+  left: 34px;
+  right: 34px;
+  height: 64px;
+  z-index: -1;
+  background: linear-gradient(90deg, var(--case-lo) 0%, var(--case-mid) 50%, var(--case-lo) 100%);
+}
+.watch-bezel__band--top {
+  top: -52px;
+  border-radius: 20px 20px 6px 6px;
+}
+.watch-bezel__band--bottom {
+  bottom: -52px;
+  border-radius: 6px 6px 20px 20px;
+}
+.watch-bezel__crown {
+  position: absolute;
+  right: -10px;
+  top: 58px;
+  width: 13px;
+  height: 40px;
+  border-radius: 5px;
+  background:
+    repeating-linear-gradient(180deg, transparent 0 2px, var(--crown-ridge) 2px 3px),
+    linear-gradient(90deg, var(--crown-lo) 0%, var(--crown-hi) 60%, var(--crown-lo) 100%);
+  box-shadow: inset -2px 0 0 var(--crown-accent);
+}
+.watch-bezel__button {
+  position: absolute;
+  right: -5px;
+  top: 128px;
+  width: 6px;
+  height: 52px;
+  border-radius: 3px;
+  background: linear-gradient(90deg, var(--crown-lo) 0%, var(--crown-hi) 100%);
+}
+.watch-bezel__glass {
+  position: relative;
+  padding: 6px;
+  border-radius: 46px;
+  background: var(--case-lo);
+}
+.watch-bezel__glass::after {
   content: "";
   position: absolute;
-  right: -7px;
-  top: 70px;
-  width: 8px;
-  height: 36px;
-  border-radius: 4px;
-  background: linear-gradient(90deg, var(--ink) 0%, var(--ink-2) 100%);
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(135deg, var(--glass-shine) 0%, transparent 45%);
 }
 .watch-bare {
   position: fixed;
   inset: 0;
 }
 .watch-canvas {
-  width: 200px;
-  height: 244px;
-  border-radius: 38px;
+  width: 192px;
+  height: 234px;
+  border-radius: 40px;
   overflow: hidden;
   position: relative;
   margin: 0 auto;
+  text-align: left;
+  -webkit-font-smoothing: antialiased;
 }
 .watch-bare .watch-canvas {
   width: 100%;
@@ -2063,32 +2124,78 @@ a {
   border-radius: 0;
 }
 
+/* Pager + watchOS status bar. */
 .pager {
   width: 100%;
   height: 100%;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 14px;
+  padding: 10px 12px 8px;
   cursor: pointer;
+  user-select: none;
+}
+.pager__status {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 2px 6px 0 8px;
+  font-family: var(--font-watch);
+  font-size: 13px;
+  font-weight: 600;
+}
+.pager__title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pager__title--blue {
+  color: var(--watch-blue);
+}
+.pager__title--amber {
+  color: var(--watch-amber);
+}
+.pager__title--teal {
+  color: var(--watch-charles);
+}
+.pager__title--red {
+  color: var(--watch-brick);
+}
+.pager__time {
+  flex: 0 0 auto;
+  color: var(--watch-text);
+  font-variant-numeric: tabular-nums;
 }
 .pager__view {
   flex: 1 1 auto;
+  min-height: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   width: 100%;
-  animation: rise-in var(--dur-3) var(--ease-out) both;
+  animation: watch-in 320ms var(--ease-out) both;
+}
+@keyframes watch-in {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+    filter: blur(2px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
 }
 .pager__dots {
   display: flex;
-  gap: 6px;
-  padding-top: 8px;
+  justify-content: center;
+  gap: 5px;
+  padding-top: 4px;
 }
 .pager__dot {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
   border-radius: var(--radius-pill);
   background: var(--watch-ink);
   opacity: 0.3;
@@ -2098,34 +2205,223 @@ a {
 }
 .pager__dot--on {
   opacity: 1;
-  width: 16px;
-  background: var(--watch-charles);
+  width: 12px;
 }
 
+/* Watch face. */
+.wface {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 4px 2px 0;
+  font-family: var(--font-watch);
+}
+.wface__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 6px 0 8px;
+}
+.wface__date {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+.wface__weekday {
+  color: var(--watch-brick);
+  text-transform: uppercase;
+}
+.wface__day {
+  color: var(--watch-text);
+}
+.wface__exposure {
+  display: inline-flex;
+}
+.wface__time {
+  display: block;
+  margin: 2px 0 6px;
+  padding-left: 6px;
+  font-family: var(--font-watch);
+  font-size: 58px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: var(--watch-text);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.wface__comps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  justify-content: space-between;
+  gap: 2px;
+}
+.wcomp {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  animation: pop-in 420ms var(--ease-spring) both;
+}
+.wcomp:nth-child(2) {
+  animation-delay: 70ms;
+}
+.wcomp:nth-child(3) {
+  animation-delay: 140ms;
+}
+.wcomp__dial {
+  position: relative;
+  width: 54px;
+  height: 54px;
+}
+.wcomp__dial > svg {
+  position: absolute;
+  inset: 0;
+}
+.wcomp__arc {
+  transition: stroke-dasharray 600ms var(--ease-out);
+}
+.wcomp__inner {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+}
+.wcomp__value {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  color: var(--watch-text);
+  max-width: 44px;
+  overflow: hidden;
+  text-overflow: clip;
+  white-space: nowrap;
+}
+.wcomp__label {
+  font-family: var(--font-watch-text);
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.wcomp--heart .wcomp__label {
+  color: var(--watch-brick);
+}
+.wcomp--temp .wcomp__label {
+  color: var(--watch-amber);
+}
+.wcomp--temp.wcomp--necklace .wcomp__label {
+  color: var(--watch-necklace);
+}
+.wcomp--temp.wcomp--brick .wcomp__label {
+  color: var(--watch-brick);
+}
+.wcomp--steps .wcomp__label {
+  color: var(--watch-necklace);
+}
+.wcomp__heart {
+  animation: heartbeat 1s ease-in-out infinite;
+  transform-origin: center;
+}
+@keyframes heartbeat {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  15% {
+    transform: scale(1.28);
+  }
+  30% {
+    transform: scale(0.95);
+  }
+  45% {
+    transform: scale(1.14);
+  }
+  60% {
+    transform: scale(1);
+  }
+}
+.wface__sim {
+  margin-top: auto;
+  align-self: center;
+  padding: 1px 7px;
+  border-radius: var(--radius-pill);
+  background: var(--watch-surface-2);
+  color: var(--watch-purple);
+  font-family: var(--font-watch-text);
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+:lang(ja) .wcomp__label,
+:lang(zh-Hans) .wcomp__label,
+:lang(ja) .wface__weekday,
+:lang(zh-Hans) .wface__weekday {
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+/* App views. */
 .watch-view {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   color: var(--watch-text);
   text-align: center;
+  font-family: var(--font-watch);
+}
+.watch-empty {
+  color: var(--watch-text-2);
+  font-size: 15px;
+  font-weight: 600;
+}
+.watch-view .badge {
+  font-size: 9px;
+  padding: 2px 8px;
+  background: var(--watch-surface-2);
+  color: var(--watch-purple);
 }
 .watch-next__glyph {
+  width: 40px;
+  height: 40px;
+  padding: 6px;
+  border-radius: 50%;
+  background: var(--watch-blue);
   margin-bottom: 2px;
 }
 .watch-next__dist {
+  font-family: var(--font-watch);
   font-size: 34px;
-  font-weight: 800;
-  color: var(--watch-charles);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--watch-text);
 }
 .watch-next__turn {
   margin: 0;
-  font-size: 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--watch-text-2);
 }
 .watch-ring__dial {
   position: relative;
-  width: 140px;
-  height: 140px;
+  width: 130px;
+  height: 130px;
+}
+.watch-ring__dial svg {
+  width: 100%;
+  height: 100%;
 }
 .watch-ring__center {
   position: absolute;
@@ -2134,20 +2430,24 @@ a {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 2px;
+  gap: 0;
 }
 .watch-ring__pct {
+  font-family: var(--font-watch);
   font-size: 30px;
-  font-weight: 800;
+  font-weight: 700;
 }
 .watch-ring__bandtext {
-  font-size: 12px;
+  font-size: 11px;
+  font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  opacity: 0.85;
+  color: var(--watch-text-2);
 }
 .watch-ring__eta {
-  font-size: 13px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--watch-text-2);
 }
 .watch-oasis__glyphs {
   display: flex;
@@ -2157,26 +2457,35 @@ a {
 .watch-oasis__bearing {
   transition: none;
 }
-.watch-oasis__dist {
-  font-size: 24px;
-  font-weight: 800;
-  color: var(--watch-necklace);
+.watch-oasis__name {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
 }
+.watch-oasis__dist {
+  font-family: var(--font-watch);
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--watch-charles);
+}
+.watch-oasis__min,
 .watch-oasis__status {
-  font-size: 12px;
-  opacity: 0.8;
+  font-size: 11px;
+  color: var(--watch-text-2);
 }
 .watch-body__pulse {
-  opacity: 0.9;
   animation: float 1.2s ease-in-out infinite;
 }
 .watch-body__hr {
-  font-size: 40px;
-  font-weight: 800;
-  color: var(--watch-brick);
+  font-family: var(--font-watch);
+  font-size: 44px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--watch-text);
 }
 .watch-body__base {
-  font-size: 13px;
+  font-size: 12px;
+  color: var(--watch-text-2);
 }
 
 .watch-alert {
@@ -2186,21 +2495,41 @@ a {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: 8px;
   padding: 14px;
   color: var(--watch-text);
   text-align: center;
+  font-family: var(--font-watch);
   animation: pop-in var(--dur-3) var(--ease-spring) both;
 }
+.watch-alert__title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+}
 .watch-alert__haptic {
-  font-size: 12px;
-  opacity: 0.8;
+  font-size: 11px;
+  color: var(--watch-text-2);
 }
 .watch-alert__actions {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
   width: 100%;
+}
+.watch-alert__actions .btn {
+  min-height: 44px;
+  border-radius: var(--radius-pill);
+  font-family: var(--font-watch);
+  box-shadow: none;
+}
+.watch-alert__actions .btn--primary {
+  background: var(--watch-necklace);
+  color: var(--watch-bg);
+}
+.watch-alert__actions .btn--secondary {
+  background: var(--watch-surface-2);
+  color: var(--watch-text);
 }
 
 .complications {
@@ -2438,7 +2767,7 @@ a {
 }
 .lab__watch-preview .watch-bezel {
   animation: none;
-  margin: 12px auto;
+  margin: 60px auto;
 }
 
 .chart {
