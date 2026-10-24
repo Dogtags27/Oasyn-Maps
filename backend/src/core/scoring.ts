@@ -70,7 +70,19 @@ export function pairwiseJ(mode: PlanContext["mode"], r: RouteMetrics, ref: Route
   return w.w_t * (r.timeSec / tRef) + w.w_h * (r.personalHeat / xRef) + w.w_s * r.safetyMax;
 }
 
-/** Coolest route within the detour cap and hard safety (LARAC-style pick). */
+/**
+ * Coolest route within the detour cap and hard safety (LARAC-style pick).
+ *
+ * LIMITATION (documented, R6.4): we select the coolest among the SUPPORTED
+ * frontier points that satisfy the time cap. The Lagrangian/weighted-sum frontier
+ * finds only *supported* Pareto-optimal routes (those on the lower convex hull of
+ * the time-vs-heat trade-off). A constrained-shortest-path optimum can lie in a
+ * duality gap — a non-supported point strictly better than any supported one
+ * within the cap. We accept this gap for the MVP: the exact state-dependent search
+ * over (node, bucket(A)) that would close it is a stretch item (math.md §5.4,
+ * design §14). In practice the gap is small for walking graphs and this pick is a
+ * close, fast approximation.
+ */
 export function coolestWithinCap(ctx: PlanContext, routes: EngineRoute[]): EngineRoute | null {
   if (routes.length === 0) return null;
   const w = modeWeights[ctx.mode];

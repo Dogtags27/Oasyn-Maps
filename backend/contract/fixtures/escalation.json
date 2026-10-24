@@ -1,12 +1,12 @@
 {
   "kind": "sample",
   "endpoint": "POST /api/escalation/step",
+  "generated": "from-live-engine",
   "response": {
     "state": {
       "phase": "countdown",
-      "deadlineMs": 1792000060000
+      "deadlineMs": 1784656860000
     },
-    "dispatchInfo": { "key": "escalation.dispatch.sharedData" },
     "simulated": true
   }
 }
