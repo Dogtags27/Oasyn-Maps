@@ -21,6 +21,7 @@ import { SunBadge } from "@/map/SunBadge";
 import { Legend } from "@/ui/Legend";
 import { DirectionsList } from "@/a11y/DirectionsList";
 import { Sheet } from "@/ui/Sheet";
+import { SearchBar } from "@/ui/SearchBar";
 import { RoutePeek } from "@/ui/RoutePeek";
 import { TripControls } from "@/ui/TripControls";
 import { RouteCard } from "@/ui/RouteCard";
@@ -74,12 +75,12 @@ export function Navigator() {
         <div className="navigator__map">
           <MapView
             onMapClick={(ll) => {
-              if (!start) setStart(ll);
-              else if (!goal) setGoal(ll);
+              if (!start) setStart(ll, t("trip.pinDropped"));
+              else if (!goal) setGoal(ll, t("trip.pinDropped"));
               else {
                 // Start a new trip: the tap becomes the new start.
                 setGoal(null);
-                setStart(ll);
+                setStart(ll, t("trip.pinDropped"));
               }
             }}
           >
@@ -92,6 +93,8 @@ export function Navigator() {
           </MapView>
           <SunBadge />
         </div>
+
+        <SearchBar />
 
         <Sheet handleLabel={t("a11y.sheetHandle")} initial="half">
           <RoutePeek />

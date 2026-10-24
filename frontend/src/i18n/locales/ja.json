@@ -61,6 +61,12 @@
   "trip.startWalk": "開始",
   "trip.searchPlaces": "場所を検索",
   "trip.noResults": "一致する場所がありません。",
+  "trip.whereTo": "どこに行きますか?",
+  "trip.planTrip": "行き方を検索",
+  "trip.swap": "出発地と目的地を入れ替える",
+  "trip.pinDropped": "ピンを置きました",
+  "trip.searchExpanded": "検索を展開しました。",
+  "trip.searchCollapsed": "検索を折りたたみました。",
 
   "app.name": "Oasyn Maps",
   "app.tagline": "より暑い世界のための、暑さを考えたナビ。",

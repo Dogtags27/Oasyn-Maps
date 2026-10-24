@@ -1,7 +1,7 @@
 /**
- * ui/TripControls.tsx — start/destination + mode + prior-exposure controls (R5.2, R5.5).
+ * ui/TripControls.tsx — mode + prior-exposure controls (R5.2, R5.5).
  *
- * Start and destination are settable via place search (no map needed, R13.3).
+ * Start and destination live in the SearchBar (R13.3's no-map-needed search).
  * Mode (Fastest safe / Balanced / Coolest) and prior exposure (Fresh / 30 / 60)
  * are keyboard-operable segmented controls whose values flow into the plan
  * request. Changing any of them re-plans when both endpoints are set.
@@ -9,7 +9,6 @@
 import { useT } from "@/i18n/useLocale";
 import { useStore } from "@/store";
 import { SegmentedControl } from "./SegmentedControl";
-import { PlaceSearch } from "./PlaceSearch";
 import { Button } from "./Button";
 import { usePlan } from "@/api/usePlan";
 import type { ModeT } from "@/api/types";
@@ -21,8 +20,6 @@ export function TripControls() {
   const setMode = useStore((s) => s.setMode);
   const prior = useStore((s) => s.prior);
   const setPrior = useStore((s) => s.setPrior);
-  const setStart = useStore((s) => s.setStart);
-  const setGoal = useStore((s) => s.setGoal);
   const start = useStore((s) => s.start);
   const goal = useStore((s) => s.goal);
   const plan = usePlan();
@@ -42,9 +39,6 @@ export function TripControls() {
 
   return (
     <div className="trip-controls">
-      <PlaceSearch label={t("trip.start")} onPick={(at) => setStart(at)} />
-      <PlaceSearch label={t("trip.destination")} onPick={(at) => setGoal(at)} />
-
       <div className="trip-controls__group">
         <span className="trip-controls__label">{t("mode.label")}</span>
         <SegmentedControl

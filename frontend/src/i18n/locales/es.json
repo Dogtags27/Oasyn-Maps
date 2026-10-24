@@ -61,6 +61,12 @@
   "trip.startWalk": "Iniciar",
   "trip.searchPlaces": "Buscar lugares",
   "trip.noResults": "No hay lugares coincidentes.",
+  "trip.whereTo": "¿A dónde vas?",
+  "trip.planTrip": "Planificar un viaje",
+  "trip.swap": "Intercambiar inicio y destino",
+  "trip.pinDropped": "Marcador colocado",
+  "trip.searchExpanded": "Búsqueda de viaje expandida.",
+  "trip.searchCollapsed": "Búsqueda de viaje contraída.",
 
   "app.name": "Oasyn Maps",
   "app.tagline": "Navegación consciente del calor para un mundo más cálido.",

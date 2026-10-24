@@ -13,11 +13,6 @@
     "features": [
       {
         "type": "Feature",
-        "geometry": { "type": "Point", "coordinates": [-71.085, 42.3445] },
-        "properties": { "id": "sample-cc-1", "name": "Sample Cooling Center", "status": "unknown", "simulated": true }
-      },
-      {
-        "type": "Feature",
         "geometry": { "type": "Point", "coordinates": [-71.0862, 42.3418] },
         "properties": { "id": "sample-cc-2", "name": "Sample Library Cooling", "status": "unknown", "simulated": true }
       }

@@ -43,6 +43,10 @@ export interface ScenarioSlice {
   prior: PriorPreset;
   start: LatLngT | null;
   goal: LatLngT | null;
+  /** Display label for `start` (place name, or null for a map-dropped pin). */
+  startLabel: string | null;
+  /** Display label for `goal` (place name, or null for a map-dropped pin). */
+  goalLabel: string | null;
 }
 
 export interface RoutesSlice {
@@ -124,8 +128,8 @@ export interface Store
   setScenario: (patch: Partial<ScenarioT>) => void;
   setMode: (m: ModeT) => void;
   setPrior: (p: PriorPreset) => void;
-  setStart: (p: LatLngT | null) => void;
-  setGoal: (p: LatLngT | null) => void;
+  setStart: (p: LatLngT | null, label?: string | null) => void;
+  setGoal: (p: LatLngT | null, label?: string | null) => void;
   addZone: (z: ZoneT) => void;
   removeZoneAt: (at: LatLngT) => void;
 
@@ -273,14 +277,16 @@ export const useStore = create<Store>((set, get) => {
     prior: "fresh",
     start: null,
     goal: null,
+    startLabel: null,
+    goalLabel: null,
     setScenario: (patch) => set((s) => ({ scenario: { ...s.scenario, ...patch } })),
     setMode: (m) => set({ mode: m }),
     setPrior: (p) => {
       const priorWalkMin = p === "fresh" ? 0 : p === "30" ? 30 : 60;
       set((s) => ({ prior: p, scenario: { ...s.scenario, priorWalkMin } }));
     },
-    setStart: (p) => set({ start: p }),
-    setGoal: (p) => set({ goal: p }),
+    setStart: (p, label = null) => set({ start: p, startLabel: p ? label : null }),
+    setGoal: (p, label = null) => set({ goal: p, goalLabel: p ? label : null }),
     addZone: (z) =>
       set((s) => ({ scenario: { ...s.scenario, zones: [...s.scenario.zones, z] } })),
     removeZoneAt: (at) =>

@@ -180,7 +180,8 @@
 
 .sun-badge {
   position: absolute;
-  top: 12px;
+  /* Cleared below the floating search bar's collapsed pill (R5.2/R13.3). */
+  top: 68px;
   right: 12px;
   z-index: 420;
   display: flex;
@@ -289,6 +290,126 @@
 .place-search__empty {
   color: var(--ink-2);
   padding: 8px 0;
+}
+
+/* --- search bar: Google-Maps-style collapsed pill -> start/destination (R5.2, R13.3) --- */
+
+.search-bar {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  right: 12px;
+  z-index: 520; /* above the sheet (500), stays visible at every snap point */
+  background: var(--paper);
+  border: var(--stroke-w) solid var(--ink);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-offset) var(--shadow-offset) 0 var(--ink);
+}
+
+.search-bar--collapsed {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 48px;
+  padding: 10px 14px;
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  color: var(--ink);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+}
+
+.search-bar__icon {
+  flex: 0 0 auto;
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--ink);
+  border-radius: 50%;
+  position: relative;
+  margin-right: 2px;
+}
+.search-bar__icon::after {
+  content: "";
+  position: absolute;
+  width: 7px;
+  height: 2px;
+  background: var(--ink);
+  bottom: -5px;
+  right: -5px;
+  transform: rotate(45deg);
+}
+
+.search-bar__summary {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.search-bar--expanded {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+}
+.search-bar__fields {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.search-bar__field {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+.search-bar__field .place-search {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.search-bar__dot {
+  flex: 0 0 auto;
+  width: 10px;
+  height: 10px;
+  margin-top: 26px;
+  border-radius: 50%;
+  border: 2px solid var(--ink);
+}
+.search-bar__dot--start {
+  background: var(--paper);
+}
+.search-bar__dot--goal {
+  background: var(--ink);
+}
+.search-bar__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.search-bar__swap,
+.search-bar__close {
+  min-height: 48px;
+  min-width: 48px;
+  font-size: 20px;
+  background: var(--paper);
+  color: var(--ink);
+  border: var(--stroke-w) solid var(--ink);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+.search-bar__swap:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Desktop: dock the search bar above the 400px left panel (R5.7). */
+@media (min-width: 900px) {
+  .search-bar {
+    left: 12px;
+    right: auto;
+    width: 376px;
+  }
 }
 
 /* --- navigator layout --- */
@@ -727,6 +848,9 @@
   color: var(--watch-text);
   text-align: center;
 }
+.watch-next__glyph {
+  margin-bottom: 2px;
+}
 .watch-next__dist {
   font-size: 34px;
   font-weight: 700;
@@ -735,10 +859,40 @@
   margin: 0;
   font-size: 14px;
 }
-.watch-ring__eta,
-.watch-ring__band,
-.watch-ring__band-label {
+.watch-ring__dial {
+  position: relative;
+  width: 140px;
+  height: 140px;
+}
+.watch-ring__center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+.watch-ring__pct {
+  font-size: 30px;
+  font-weight: 700;
+}
+.watch-ring__bandtext {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  opacity: 0.85;
+}
+.watch-ring__eta {
   font-size: 13px;
+}
+.watch-oasis__glyphs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.watch-oasis__bearing {
+  transition: none;
 }
 .watch-oasis__dist {
   font-size: 24px;
@@ -746,6 +900,9 @@
 .watch-oasis__status {
   font-size: 12px;
   opacity: 0.8;
+}
+.watch-body__pulse {
+  opacity: 0.9;
 }
 .watch-body__hr {
   font-size: 40px;
