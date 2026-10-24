@@ -8,43 +8,45 @@ Tiers: **T1** = demo cannot run without it. **T2** = coverage, departure, polish
 
 ## Hour 1 — Scaffold, contract, config, data download
 
-- [ ] 1. Scaffold the backend package and tooling
+- [x] 1. Scaffold the backend package and tooling
   - Create `backend/package.json`, `tsconfig.json`, `vitest.config.ts`; add scripts (`dev`, `test`, `fixtures`, `lint:nohardcode`, `i18n:check`) and root `package.json` workspace wiring.
   - Create the `src/`, `contract/`, `scripts/`, `data/`, `test/` folder skeleton.
   - _Requirements: R16.1, R17_
 
-- [ ] 2. Define `config.ts` with every constant
+- [x] 2. Define `config.ts` with every constant
   - Put bbox, speeds, step multiplier, `tau`, bands (`b1`, `b2`), weights per mode `(w_t, w_h, w_s, rho)`, `k0`, `alpha`, `a1..a3`, `n_t`, `n_b`, `Q_max`, `T_lo`, `T_hi`, thresholds (`T1`, `T2`, hysteresis, `S_hard`), event sizes, countdown length, `SNOOZE_MIN`, `REARM_DELTA`, `eps`, `o_max`, `delta_A`, `pf_max`, `gamma`, `m`, body constants (`Tc0`, `k_A`, `k_HR`, `r`), LRU size, grid cell size, sample step, and `seed`.
   - Export a `publicConfig` slice for `/api/config`.
   - _Requirements: R14.1, R14.2_
 
-- [ ] 3. Author the contract: schemas, messages, stub fixtures
-  - [ ] 3.1 Write `contract/schemas.ts` (zod) for every request/response, shared types (`Scenario`, `Zone`, `LatLng`, `RouteResult`, `Offer`, `Turn`, `OasisHit`, `RerouteEvent`, `Descriptor`, `ApiError`) and export `CONTRACT_VERSION`.
+- [x] 3. Author the contract: schemas, messages, stub fixtures
+  - [x] 3.1 Write `contract/schemas.ts` (zod) for every request/response, shared types (`Scenario`, `Zone`, `LatLng`, `RouteResult`, `Offer`, `Turn`, `OasisHit`, `RerouteEvent`, `Descriptor`, `ApiError`) and export `CONTRACT_VERSION`.
     - _Requirements: R13.1, R13.7_
-  - [ ] 3.2 Write `contract/messages.json` with every descriptor key the backend will emit plus example vars; document frontend-owned keys (`mode.*`, `preset.*`, `trip.*`).
+  - [x] 3.2 Write `contract/messages.json` with every descriptor key the backend will emit plus example vars; document frontend-owned keys (`mode.*`, `preset.*`, `trip.*`).
     - _Requirements: R13.4_
-  - [ ] 3.3 Add one `kind: "sample"` fixture per endpoint under `contract/fixtures/` with illustrative Back Bay / Northeastern geometry and "Sample ..." resource names.
+  - [x] 3.3 Add one `kind: "sample"` fixture per endpoint under `contract/fixtures/` with illustrative Back Bay / Northeastern geometry and "Sample ..." resource names.
     - _Requirements: R13.8, R2.7_
-  - [ ] 3.4 Write `contract/README.md` restating the contract rules.
+  - [x] 3.4 Write `contract/README.md` restating the contract rules.
     - _Requirements: R13_
 
-- [ ] 4. Stub API server up (ping B when live)
-  - [ ] 4.1 `server.ts` bootstrap; `routes/error.ts` with `ApiError` mapping and the `X-Oasyn-Stub: true` helper.
+- [x] 4. Stub API server up (ping B when live)
+  - [x] 4.1 `server.ts` bootstrap; `routes/error.ts` with `ApiError` mapping and the `X-Oasyn-Stub: true` helper.
     - _Requirements: R13.5, R13.6_
-  - [ ] 4.2 Mount all endpoints returning their fixtures with the stub header, each validating request bodies against the schema.
+  - [x] 4.2 Mount all endpoints returning their fixtures with the stub header, each validating request bodies against the schema.
     - _Requirements: R13.2, R13.6_
-  - [ ] 4.3 `GET /api/config` returns `publicConfig`; `GET /api/meta` returns `meta.json` + `CONTRACT_VERSION`.
+  - [x] 4.3 `GET /api/config` returns `publicConfig`; `GET /api/meta` returns `meta.json` + `CONTRACT_VERSION`.
     - _Requirements: R13.3, R13.2_
 
-- [ ] 5. Contract test harness (gate)
+- [x] 5. Contract test harness (gate)
   - Write `test/contract.test.ts`: every fixture validates against its schema; every descriptor key used in fixtures exists in `messages.json`. Wire into `npm test`.
   - _Requirements: R17.5, R13.4, R13.8_
 
-- [ ] 6. Start the data snapshot build
-  - [ ] 6.1 `scripts/build-data.mjs`: fetch Overpass layers (ways, parks, trees, buildings, water, places) for the bbox with mirror fallback; fetch cooling centers from the GIS URL.
+- [x] 6. Start the data snapshot build
+  - [x] 6.1 `scripts/build-data.mjs`: fetch Overpass layers (ways, parks, trees, buildings, water, places) for the bbox with mirror fallback; fetch cooling centers from the GIS URL.
     - _Requirements: R2.1, R2.4, R2.7_
-  - [ ] 6.2 Build the raw graph, write `meta.json` provenance per layer; log node/edge counts.
+  - [x] 6.2 Build the raw graph, write `meta.json` provenance per layer; log node/edge counts.
     - _Requirements: R2.3, R2.5_
+  <!-- Script authored and ready; run `npm --prefix backend run build-data` manually to download + commit the snapshot (needs network). Raw-graph build, provenance, and count logging are wired; feature baking + contraction land in Hour 2 (task 7). -->
+
 
 ---
 

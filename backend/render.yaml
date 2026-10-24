@@ -1,0 +1,29 @@
+# Render blueprint for the Oasyn backend STUB server.
+#
+# This blueprint lives inside backend/ because the backend is deployed as its
+# own root on Render (the backend folder is the service root). If you instead
+# point Render at the monorepo root, move this file up and add `rootDir: backend`.
+#
+# Purpose: a shared test deploy so the frontend team has live sample data for
+# Hour 1 (tasks 4+). Every endpoint returns validated sample fixtures with the
+# `X-Oasyn-Stub: true` header — no real engine, no snapshot, no R2 credentials
+# needed. Do NOT put R2 secrets here; the stub does not touch storage.
+services:
+  - type: web
+    name: oasyn-backend-stub
+    runtime: node
+    plan: free
+    region: ohio
+    # tsx runs the TS entrypoint at runtime and is a devDependency; Render sets
+    # NODE_ENV=production which would skip dev deps, so include them explicitly.
+    buildCommand: npm ci --include=dev
+    startCommand: npm start
+    healthCheckPath: /healthz
+    autoDeploy: false
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      # Leave CORS open for the shared test deploy. To restrict later, set this
+      # to a comma-separated list of frontend origins.
+      # - key: CORS_ORIGIN
+      #   value: https://your-frontend.example.com

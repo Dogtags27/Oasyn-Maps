@@ -1,0 +1,55 @@
+{
+  "_meta": {
+    "description": "Catalog of every descriptor key the Oasyn backend can emit. All user-facing text crosses the API as {key, vars}; the frontend renders via t(key, vars). contract.test.ts fails the build if a fixture uses a key missing here (R13.4).",
+    "frontendOwned": {
+      "note": "These namespaces are rendered and owned by the frontend; the backend never emits them. Documented here for clarity only.",
+      "namespaces": ["mode.*", "preset.*", "trip.*"]
+    }
+  },
+
+  "route.explain.shadeDiff": { "exampleVars": { "pct": 42 } },
+  "route.explain.fastestLosesOnHeat": { "exampleVars": { "heatMin": 7 } },
+  "route.explain.a0ChangedRanking": { "exampleVars": {} },
+  "route.explain.viaStopOffered": { "exampleVars": { "name": "Sample Cooling Center" } },
+  "route.explain.safetyBlock": { "exampleVars": {} },
+  "route.explain.coolestWithinCap": { "exampleVars": { "capPct": 30 } },
+
+  "route.noPath": { "exampleVars": {} },
+  "route.warning.safetyMaskDropped": { "exampleVars": {} },
+
+  "turn.left": { "exampleVars": { "street": "Sample Ave" } },
+  "turn.right": { "exampleVars": { "street": "Sample St" } },
+  "turn.straight": { "exampleVars": {} },
+  "turn.slightLeft": { "exampleVars": { "street": "Sample Ave" } },
+  "turn.slightRight": { "exampleVars": { "street": "Sample St" } },
+  "turn.arrive": { "exampleVars": {} },
+  "turn.depart": { "exampleVars": { "street": "Sample St" } },
+
+  "offer.reroute.trigger": { "exampleVars": { "deltaHeatMin": 5 } },
+  "offer.viaStop.trigger": { "exampleVars": { "name": "Sample Cooling Center", "deltaA": 0.12 } },
+  "offer.safety.trigger": { "exampleVars": {} },
+  "offer.break.trigger": { "exampleVars": {} },
+
+  "oasis.cooling": { "exampleVars": { "name": "Sample Cooling Center" } },
+  "oasis.water": { "exampleVars": { "name": "Sample Fountain" } },
+  "oasis.park": { "exampleVars": { "name": "Sample Park" } },
+
+  "body.label.illustrative": { "exampleVars": {} },
+  "body.label.simulatedWearable": { "exampleVars": {} },
+
+  "escalation.dispatch.sharedData": { "exampleVars": {} },
+
+  "coverage.heuristicNote": { "exampleVars": {} },
+  "coverage.suggestion": { "exampleVars": { "rank": 1 } },
+
+  "weather.fallback.heatwave": { "exampleVars": {} },
+
+  "error.badRequest": { "exampleVars": {} },
+  "error.validation": { "exampleVars": { "path": "scenario.timeISO" } },
+  "error.unknownLayer": { "exampleVars": { "name": "foo" } },
+  "error.internal": { "exampleVars": {} },
+
+  "preset.label.heatwave": { "exampleVars": {} },
+  "preset.label.mildMorning": { "exampleVars": {} },
+  "trip.label.backBayToNeu": { "exampleVars": {} }
+}

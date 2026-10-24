@@ -1,0 +1,53 @@
+{
+  "kind": "sample",
+  "endpoint": "GET /api/presets",
+  "response": {
+    "weather": [
+      {
+        "id": "heatwave",
+        "label": { "key": "preset.label.heatwave" },
+        "scenario": {
+          "timeISO": "2026-07-21T14:00:00-04:00",
+          "tempC": 36,
+          "rh": 45,
+          "cloud": 0.1,
+          "priorWalkMin": 15,
+          "hr": 88,
+          "stepFree": false,
+          "zones": [],
+          "liveWeather": false
+        }
+      },
+      {
+        "id": "mild-morning",
+        "label": { "key": "preset.label.mildMorning" },
+        "scenario": {
+          "timeISO": "2026-07-21T08:00:00-04:00",
+          "tempC": 24,
+          "rh": 60,
+          "cloud": 0.4,
+          "priorWalkMin": 0,
+          "stepFree": false,
+          "zones": [],
+          "liveWeather": false
+        }
+      }
+    ],
+    "trips": [
+      {
+        "id": "backbay-neu",
+        "label": { "key": "trip.label.backBayToNeu" },
+        "from": { "lat": 42.3480, "lng": -71.0810 },
+        "to": { "lat": 42.3398, "lng": -71.0892 }
+      }
+    ],
+    "zones": [
+      {
+        "center": { "lat": 42.3440, "lng": -71.0850 },
+        "q": 0.6,
+        "r": 120,
+        "simulated": true
+      }
+    ]
+  }
+}

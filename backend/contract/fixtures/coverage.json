@@ -1,0 +1,21 @@
+{
+  "kind": "sample",
+  "endpoint": "POST /api/coverage",
+  "response": {
+    "within5Pct": 62.5,
+    "within10Pct": 88.0,
+    "samples": [
+      { "at": { "lat": 42.3445, "lng": -71.0850 }, "minutes": 2.1 },
+      { "at": { "lat": 42.3398, "lng": -71.0892 }, "minutes": 6.8 },
+      { "at": { "lat": 42.3480, "lng": -71.0810 }, "minutes": 9.4 }
+    ],
+    "suggestions": [
+      {
+        "at": { "lat": 42.3470, "lng": -71.0825 },
+        "label": { "key": "coverage.suggestion", "vars": { "rank": 1 } },
+        "benefit": 3.4
+      }
+    ],
+    "heuristicNote": { "key": "coverage.heuristicNote" }
+  }
+}
