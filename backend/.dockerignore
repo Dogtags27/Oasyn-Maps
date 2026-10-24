@@ -1,0 +1,19 @@
+# Keep the build context small and secret-free.
+node_modules
+dist
+data
+test
+coverage
+*.log
+.DS_Store
+
+# Secrets must never enter the image; ECS injects them at runtime.
+.env
+.env.*
+
+# Not needed at runtime.
+Dockerfile
+.dockerignore
+render.yaml
+*.md
+contract/README.md

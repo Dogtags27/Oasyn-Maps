@@ -1,0 +1,38 @@
+# AWS Amplify Hosting build spec for the Oasyn Maps frontend (monorepo).
+#
+# The frontend lives in frontend/ but imports the shared API contract from
+# ../backend/contract, which is why this is a monorepo spec: Amplify clones the
+# whole repo, then runs these commands inside appRoot.
+#
+# Required Amplify environment variables (App settings -> Environment variables):
+#   VITE_API_MODE        live
+#   VITE_API_BASE        https://<your-ecs-express-url>   (no trailing slash)
+#   VITE_CARTO_API_KEY   <your CARTO basemap key>          (optional but recommended)
+#   AMPLIFY_MONOREPO_APP_ROOT  frontend                     (set automatically by the console)
+#
+# Vite inlines VITE_* values at BUILD time, so changing any of them requires a
+# redeploy (Amplify -> branch -> Redeploy this version).
+version: 1
+applications:
+  - appRoot: frontend
+    frontend:
+      phases:
+        preBuild:
+          commands:
+            - node --version
+            - npm ci --no-audit --no-fund
+        build:
+          commands:
+            # Fail the build loudly instead of shipping a frontend that talks to
+            # sample data or to the wrong backend.
+            - 'if [ "$VITE_API_MODE" != "live" ]; then echo "ERROR: set VITE_API_MODE=live in Amplify environment variables"; exit 1; fi'
+            - 'if [ -z "$VITE_API_BASE" ]; then echo "ERROR: set VITE_API_BASE to the backend URL in Amplify environment variables"; exit 1; fi'
+            - 'echo "Building against backend: $VITE_API_BASE"'
+            - npm run build
+      artifacts:
+        baseDirectory: dist
+        files:
+          - '**/*'
+      cache:
+        paths:
+          - node_modules/**/*

@@ -1,0 +1,14 @@
+{
+  "image": "__IMAGE_URI__",
+  "containerPort": 8080,
+  "environment": [
+    { "name": "R2_ENDPOINT", "value": "https://__R2_ACCOUNT_ID__.r2.cloudflarestorage.com" },
+    { "name": "R2_BUCKET", "value": "oasyn-maps-graph" },
+    { "name": "R2_LATEST_POINTER", "value": "snapshots/inner-metro/latest.json" },
+    { "name": "CORS_ORIGIN", "value": "*" }
+  ],
+  "secrets": [
+    { "name": "R2_ACCESS_KEY_ID", "valueFrom": "__SECRET_ARN__:R2_ACCESS_KEY_ID::" },
+    { "name": "R2_SECRET_ACCESS_KEY", "valueFrom": "__SECRET_ARN__:R2_SECRET_ACCESS_KEY::" }
+  ]
+}

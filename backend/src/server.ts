@@ -23,7 +23,7 @@ import {
 } from "../contract/schemas.js";
 import { fixture } from "./routes/fixtures.js";
 import { apiError, sendError, stub, zodToApiError } from "./routes/error.js";
-import { getMeta } from "./routes/meta.js";
+import { makeMetaRoute } from "./routes/meta.js";
 import { getConfig } from "./routes/config.js";
 import { makeLayersRoute } from "./routes/layers.js";
 import { makePlanRoute } from "./routes/plan.js";
@@ -45,24 +45,48 @@ export function createServer(snapshot?: Snapshot) {
   // CORS: the frontend calls from a different origin. For the shared test
   // deploy we allow any origin; pin to specific origins later via CORS_ORIGIN
   // (comma-separated). Stateless backend, no cookies, so this is safe here.
-  const origins = process.env.CORS_ORIGIN?.split(",").map((s) => s.trim()).filter(Boolean);
-  app.use(cors(origins && origins.length ? { origin: origins } : {}));
+  // "*" (or unset) means open; trailing slashes are dropped because browsers
+  // send the Origin header without one.
+  const origins = process.env.CORS_ORIGIN?.split(",")
+    .map((s) => s.trim().replace(/\/+$/, ""))
+    .filter(Boolean);
+  const pinned = origins && origins.length > 0 && !origins.includes("*");
+  app.use(cors(pinned ? { origin: origins } : {}));
 
   app.use(express.json({ limit: "1mb" }));
 
   // --- Health + root ---------------------------------------------------------
 
-  // Render (and any uptime check) pings this; also handy for the frontend.
+  // Load balancer / uptime checks ping this. It reports whether the real
+  // snapshot is loaded so a misconfigured deploy (e.g. missing R2 credentials)
+  // is visible at a glance instead of silently serving sample data.
+  const snapshotInfo = snapshot
+    ? {
+        loaded: true,
+        source: snapshot.source.kind,
+        version: snapshot.meta.version,
+        nodes: snapshot.V,
+        edges: snapshot.E,
+      }
+    : { loaded: false };
   app.get("/healthz", (_req: Request, res: Response) => {
-    res.json({ ok: true, contractVersion: CONTRACT_VERSION, stub: true });
+    res.json({
+      ok: true,
+      contractVersion: CONTRACT_VERSION,
+      stub: !snapshot,
+      snapshot: snapshotInfo,
+    });
   });
 
   // Friendly index so a browser hitting the base URL sees something useful.
   app.get("/", (_req: Request, res: Response) => {
     res.json({
-      service: "oasyn-maps backend (stub)",
+      service: snapshot ? "oasyn-maps backend" : "oasyn-maps backend (stub)",
       contractVersion: CONTRACT_VERSION,
-      note: "Hour 1 stub server. POST/GET endpoints return validated sample fixtures with X-Oasyn-Stub: true.",
+      snapshot: snapshotInfo,
+      note: snapshot
+        ? "Live engine: endpoints are computed from the loaded graph snapshot."
+        : "Stub mode: no snapshot loaded. Endpoints return validated sample fixtures with X-Oasyn-Stub: true.",
       endpoints: [
         "GET  /api/meta",
         "GET  /api/config",
@@ -80,7 +104,7 @@ export function createServer(snapshot?: Snapshot) {
 
   // --- GET endpoints ---------------------------------------------------------
 
-  app.get("/api/meta", getMeta);
+  app.get("/api/meta", makeMetaRoute(snapshot));
   app.get("/api/config", getConfig);
 
   app.get("/api/presets", (_req: Request, res: Response) => {
@@ -158,6 +182,10 @@ if (entry) {
   // so it never attempts an R2 fetch. Otherwise try to load the snapshot and go
   // live on layers; fall back to stub mode if the snapshot is unavailable.
   const stubOnly = process.env.STUB_ONLY === "1";
+  // REQUIRE_SNAPSHOT=1 (set in the Docker image) makes a failed snapshot load
+  // fatal: the process exits, the container is marked unhealthy, and the
+  // orchestrator retries / rolls back, instead of quietly serving sample data.
+  const requireSnapshot = process.env.REQUIRE_SNAPSHOT === "1" && !stubOnly;
   const boot = async () => {
     let snapshot: Snapshot | undefined;
     if (!stubOnly) {
@@ -168,16 +196,32 @@ if (entry) {
           `[oasyn] snapshot loaded: ${snapshot.V} nodes, ${snapshot.E} edges (${snapshot.source.kind})`,
         );
       } catch (err) {
+        if (requireSnapshot) {
+          console.error(
+            `[oasyn] FATAL: snapshot load failed (${(err as Error).message}). ` +
+              "Check the R2_* environment variables / secrets. Exiting.",
+          );
+          process.exit(1);
+        }
         console.warn(
           `[oasyn] no snapshot (${(err as Error).message}); serving stub layers.`,
         );
       }
     }
     const app = createServer(snapshot);
-    app.listen(port, () => {
+    const server = app.listen(port, () => {
       // Statelessness (R14.4): never log coordinates or identifiers.
       console.log(`[oasyn] backend listening on :${port}${snapshot ? "" : " (stub)"}`);
     });
+    // Containers are stopped with SIGTERM on every deploy/scale-in: finish
+    // in-flight requests, then exit (force after 10 s).
+    const shutdown = (signal: string) => {
+      console.log(`[oasyn] ${signal} received, shutting down`);
+      server.close(() => process.exit(0));
+      setTimeout(() => process.exit(0), 10_000).unref();
+    };
+    process.on("SIGTERM", () => shutdown("SIGTERM"));
+    process.on("SIGINT", () => shutdown("SIGINT"));
   };
   void boot();
 }
