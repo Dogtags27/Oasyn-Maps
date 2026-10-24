@@ -109,6 +109,7 @@
   "route.metric.oases": "Refugio cercano",
   "route.explanationsTitle": "Por qué esta ruta",
   "route.directionsTitle": "Indicaciones",
+  "route.recommended": "recomendada",
 
   "band.low": "baja",
   "band.elevated": "elevada",

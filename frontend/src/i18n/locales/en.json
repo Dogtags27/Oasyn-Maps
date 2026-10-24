@@ -109,6 +109,7 @@
   "route.metric.oases": "Cooling nearby",
   "route.explanationsTitle": "Why this route",
   "route.directionsTitle": "Directions",
+  "route.recommended": "recommended",
 
   "band.low": "low",
   "band.elevated": "elevated",
