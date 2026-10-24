@@ -1,13 +1,13 @@
 /**
  * lint-nohardcode.mjs — no-hardcode / determinism guard (R14.2, R6.8).
  *
- * Fleshed out fully in Hour 5 (task 29). Hour 1 ships a working skeleton that
- * already enforces the two cheapest rules so the script and npm wiring exist:
- *   - core/ must not import `Date` or `Math.random` (determinism principle).
- *   - core/ must not contain stray hex colour literals.
- *
- * Sentence-literal detection and duplicated-constant detection are added in
- * Hour 5. Exit code is non-zero on any violation.
+ * Enforces for every file under src/core/ (comments stripped first):
+ *   - no Math.random (determinism principle)
+ *   - no wall-clock reads: Date.now() / no-arg new Date() — `new Date(input)` ok
+ *   - no stray hex colour literals
+ *   - no SENTENCE literals (core emits Descriptor {key, vars}, never prose)
+ * Exit code is non-zero on any violation. (Numeric formula coefficients are not
+ * gated — they map to math.md, not config; see the note below.)
  */
 
 import { readdirSync, readFileSync, statSync } from "node:fs";
@@ -45,6 +45,39 @@ function stripComments(src) {
     .replace(/(^|[^:])\/\/[^\n]*/g, "$1"); // line comments (avoid matching "://")
 }
 
+/**
+ * Detect SENTENCE literals in core/ (R14.2): core emits Descriptor {key, vars},
+ * never prose. A sentence literal is a quoted string that reads like user-facing
+ * text — multiple words with a space and sentence punctuation or capitalisation.
+ * We allow descriptor keys (dotted, no spaces), import specifiers, and short
+ * technical strings. False positives are easy to silence by moving text into a
+ * descriptor, which is exactly the behaviour we want to enforce.
+ */
+function sentenceLiterals(code) {
+  const hits = [];
+  // Match single/double-quoted string literals (no template handling needed —
+  // core has no user-facing template strings).
+  const re = /(["'])((?:\\.|(?!\1).)*)\1/g;
+  let mt;
+  while ((mt = re.exec(code)) !== null) {
+    const s = mt[2];
+    if (!s.includes(" ")) continue; // identifiers / keys / paths never flagged
+    // Allow strings that are clearly not prose: all lowercase with dots/slashes.
+    if (/^[\w./@-]+$/.test(s)) continue;
+    // Prose heuristic: 3+ words, OR a capitalised first word + ends with .!?.
+    const words = s.trim().split(/\s+/);
+    const looksProse =
+      words.length >= 3 || (/^[A-Z]/.test(s) && /[.!?]$/.test(s.trim()));
+    if (looksProse) hits.push(s.length > 40 ? s.slice(0, 40) + "…" : s);
+  }
+  return hits;
+}
+
+// NOTE on numeric constants: core/ is math-heavy and its formula coefficients
+// map to math.md, not to config.ts. A blanket "magic number" ban would be noise,
+// so we do not gate on numeric literals; the model constants that ARE tunable
+// already live in config.ts (R14.1) and are imported, not duplicated.
+
 const violations = [];
 for (const file of walk(coreDir)) {
   const code = stripComments(readFileSync(file, "utf8"));
@@ -55,6 +88,9 @@ for (const file of walk(coreDir)) {
   if (/\bDate\.now\s*\(/.test(code)) violations.push(`${file}: uses Date.now()`);
   if (/new Date\s*\(\s*\)/.test(code)) violations.push(`${file}: uses new Date() (wall clock)`);
   if (/#[0-9a-fA-F]{3,6}\b/.test(code)) violations.push(`${file}: stray hex literal`);
+
+  const sentences = sentenceLiterals(code);
+  for (const s of sentences) violations.push(`${file}: sentence literal "${s}" (use a descriptor)`);
 }
 
 if (violations.length) {

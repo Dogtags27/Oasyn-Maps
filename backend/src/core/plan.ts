@@ -113,19 +113,32 @@ export function plan(input: PlanInput): PlanOutput {
 
   const scored = rank(ctx, routes);
   const recommended = chooseRecommended(ctx, scored, routes);
+  const recommendedKey = recommended ? routeKey(recommended) : "";
 
   // Fresh-walker ranking (A0 = 0) for the "changed vs fresh" explanation (R11.2).
-  const freshCtx: PlanContext = { ...ctx, pf: personalFactor({ A0: 0, hr: undefined, hrBase: bodyCfg.HR_base }) };
-  const freshRoutes = frontier(freshCtx, from, to, 0);
-  const freshScored = rank(freshCtx, freshRoutes);
-  const freshKey = freshScored[0] ? routeKey(freshScored[0].route) : "";
+  // PERF: skip the second frontier when the walker IS already fresh (no prior
+  // minutes and no elevated HR) — then the fresh ranking equals the actual one,
+  // so the explanation can never fire and the extra search is pure waste.
+  const walkerIsFresh =
+    scenario.priorWalkMin <= 0 &&
+    (scenario.hr === undefined || scenario.hr <= bodyCfg.HR_base);
+  let freshKey = recommendedKey;
+  if (!walkerIsFresh) {
+    const freshCtx: PlanContext = {
+      ...ctx,
+      pf: personalFactor({ A0: 0, hr: undefined, hrBase: bodyCfg.HR_base }),
+    };
+    const freshRoutes = frontier(freshCtx, from, to, 0);
+    const freshScored = rank(freshCtx, freshRoutes);
+    freshKey = freshScored[0] ? routeKey(freshScored[0].route) : recommendedKey;
+  }
 
   const fastest = routes.reduce((a, b) => (b.timeSec < a.timeSec ? b : a));
   const explanations = recommended
     ? explain({
         recommended,
         fastest,
-        recommendedKey: routeKey(recommended),
+        recommendedKey,
         freshRecommendedKey: freshKey,
         capPct: (modeWeights[ctx.mode].rho - 1) * 100,
         safetyBlocked: safetyMaskDropped,
