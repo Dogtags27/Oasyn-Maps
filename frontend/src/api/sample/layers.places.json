@@ -1,0 +1,31 @@
+{
+  "kind": "sample",
+  "endpoint": "GET /api/layers/places",
+  "response": {
+    "name": "places",
+    "provenance": {
+      "name": "Sample Places",
+      "url": "https://overpass-api.de/sample",
+      "retrievedAt": "2026-10-24T00:00:00.000Z",
+      "kind": "sample",
+      "notes": "Illustrative searchable destinations near Northeastern and Back Bay."
+    },
+    "features": [
+      {
+        "type": "Feature",
+        "geometry": { "type": "Point", "coordinates": [-71.0892, 42.3398] },
+        "properties": { "id": "sample-place-neu", "name": "Sample Northeastern Quad" }
+      },
+      {
+        "type": "Feature",
+        "geometry": { "type": "Point", "coordinates": [-71.081, 42.348] },
+        "properties": { "id": "sample-place-backbay", "name": "Sample Back Bay Station" }
+      },
+      {
+        "type": "Feature",
+        "geometry": { "type": "Point", "coordinates": [-71.0862, 42.3418] },
+        "properties": { "id": "sample-place-library", "name": "Sample Public Library" }
+      }
+    ]
+  }
+}

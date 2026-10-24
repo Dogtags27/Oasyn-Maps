@@ -1,0 +1,26 @@
+{
+  "kind": "sample",
+  "endpoint": "GET /api/layers/cooling",
+  "response": {
+    "name": "cooling",
+    "provenance": {
+      "name": "Sample Cooling Centers",
+      "url": "https://gis.boston.gov/sample",
+      "retrievedAt": "2026-10-24T00:00:00.000Z",
+      "kind": "sample",
+      "notes": "Illustrative Back Bay points; status unknown, not authoritative real-time data."
+    },
+    "features": [
+      {
+        "type": "Feature",
+        "geometry": { "type": "Point", "coordinates": [-71.085, 42.3445] },
+        "properties": { "id": "sample-cc-1", "name": "Sample Cooling Center", "status": "unknown", "simulated": true }
+      },
+      {
+        "type": "Feature",
+        "geometry": { "type": "Point", "coordinates": [-71.0862, 42.3418] },
+        "properties": { "id": "sample-cc-2", "name": "Sample Library Cooling", "status": "unknown", "simulated": true }
+      }
+    ]
+  }
+}

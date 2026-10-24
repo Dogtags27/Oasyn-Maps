@@ -1,0 +1,25 @@
+{
+  "kind": "sample",
+  "endpoint": "GET /api/meta",
+  "response": {
+    "contractVersion": "0.1.0",
+    "nodes": 0,
+    "edges": 0,
+    "layers": [
+      {
+        "name": "cooling",
+        "url": "https://gis.boston.gov/sample",
+        "retrievedAt": "2026-10-24T00:00:00.000Z",
+        "kind": "sample",
+        "notes": "Sample provenance seed owned by the frontend; backend fixtures take precedence when present."
+      },
+      {
+        "name": "parks",
+        "url": "https://overpass-api.de/sample",
+        "retrievedAt": "2026-10-24T00:00:00.000Z",
+        "kind": "sample",
+        "notes": "Sample Back Bay parks."
+      }
+    ]
+  }
+}

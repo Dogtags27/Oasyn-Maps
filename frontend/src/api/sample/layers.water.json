@@ -1,0 +1,21 @@
+{
+  "kind": "sample",
+  "endpoint": "GET /api/layers/water",
+  "response": {
+    "name": "water",
+    "provenance": {
+      "name": "Sample Drinking Water",
+      "url": "https://overpass-api.de/sample",
+      "retrievedAt": "2026-10-24T00:00:00.000Z",
+      "kind": "sample",
+      "notes": "Illustrative Back Bay fountains."
+    },
+    "features": [
+      {
+        "type": "Feature",
+        "geometry": { "type": "Point", "coordinates": [-71.0875, 42.3412] },
+        "properties": { "id": "sample-fountain-1", "name": "Sample Fountain", "status": "unknown", "simulated": true }
+      }
+    ]
+  }
+}

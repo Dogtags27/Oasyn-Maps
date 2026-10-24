@@ -1,0 +1,10 @@
+{
+  "name": "Oasyn Maps",
+  "short_name": "Oasyn",
+  "description": "Heat-aware walking navigation.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F4ECD8",
+  "theme_color": "#F4ECD8",
+  "icons": []
+}

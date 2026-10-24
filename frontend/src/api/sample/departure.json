@@ -1,0 +1,13 @@
+{
+  "kind": "sample",
+  "endpoint": "POST /api/departure",
+  "response": {
+    "points": [
+      { "tISO": "2026-07-21T08:00:00-04:00", "heatMin": 2.1 },
+      { "tISO": "2026-07-21T08:30:00-04:00", "heatMin": 2.6 },
+      { "tISO": "2026-07-21T14:00:00-04:00", "heatMin": 9.1 },
+      { "tISO": "2026-07-21T18:30:00-04:00", "heatMin": 4.0 }
+    ],
+    "best": { "tISO": "2026-07-21T08:00:00-04:00", "reductionPct": 77 }
+  }
+}

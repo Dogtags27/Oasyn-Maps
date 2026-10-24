@@ -1,0 +1,32 @@
+{
+  "kind": "sample",
+  "endpoint": "GET /api/layers/parks",
+  "response": {
+    "name": "parks",
+    "provenance": {
+      "name": "Sample Parks",
+      "url": "https://overpass-api.de/sample",
+      "retrievedAt": "2026-10-24T00:00:00.000Z",
+      "kind": "sample",
+      "notes": "Illustrative Back Bay green space."
+    },
+    "features": [
+      {
+        "type": "Feature",
+        "geometry": {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [-71.0885, 42.3405],
+              [-71.0868, 42.3405],
+              [-71.0868, 42.3418],
+              [-71.0885, 42.3418],
+              [-71.0885, 42.3405]
+            ]
+          ]
+        },
+        "properties": { "id": "sample-park-1", "name": "Sample Park", "simulated": true }
+      }
+    ]
+  }
+}

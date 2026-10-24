@@ -1,0 +1,69 @@
+/*
+ * tokens/type.css — type system (R3.4, R12.6).
+ *
+ * Fraunces (display), Atkinson Hyperlegible Next (body/UI), Atkinson
+ * Hyperlegible Mono (numbers/labels), with system-ui fallback. CJK stacks via
+ * :lang(); CJK disables uppercase/letter-spacing and uses line-height 1.6.
+ * Tabular figures on changing numbers.
+ *
+ * Font files are loaded from public/fonts when present; the system-ui fallback
+ * keeps the app legible before/without them.
+ */
+
+:root {
+  --font-display: "Fraunces", Georgia, "Times New Roman", serif;
+  --font-body: "Atkinson Hyperlegible Next", system-ui, -apple-system, sans-serif;
+  --font-mono: "Atkinson Hyperlegible Mono", ui-monospace, "SFMono-Regular", monospace;
+
+  --fs-body: 17px;
+  --fs-num: 30px;
+  --lh-body: 1.5;
+}
+
+body {
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  line-height: 1.15;
+}
+
+.mono,
+.tabular {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* CJK: serif/sans Noto stacks, no uppercase/letter-spacing, line-height 1.6. */
+:lang(zh-Hans) {
+  font-family: "Noto Sans SC", var(--font-body);
+  line-height: 1.6;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+:lang(ja) {
+  font-family: "Noto Sans JP", var(--font-body);
+  line-height: 1.6;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+:lang(zh-Hans) h1,
+:lang(zh-Hans) h2,
+:lang(zh-Hans) h3 {
+  font-family: "Noto Serif SC", var(--font-display);
+}
+
+:lang(ja) h1,
+:lang(ja) h2,
+:lang(ja) h3 {
+  font-family: "Noto Serif JP", var(--font-display);
+}
