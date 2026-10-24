@@ -28,8 +28,10 @@ displays or thresholds on comes from this contract and `/api/config`.
    it sets `X-Oasyn-Stub: true` (R13.6). The header is dropped when the real
    engine backs the endpoint.
 5. **Additive after hour 0.** Post-hour-0 changes add optional fields or new
-   endpoints only. Any breaking change bumps `CONTRACT_VERSION` here and
-   `/api/meta.contractVersion` (R13.7).
+   endpoints only. A breaking change bumps the MAJOR of `CONTRACT_VERSION` here
+   and `/api/meta.contractVersion`; an additive change bumps the MINOR (R13.7).
+   Current: `0.2.0` — added optional `ReplanRequest.current` (remaining
+   committed-route metrics) powering the hysteresis reroute offer.
 6. **Errors.** Invalid input returns HTTP 400/422 with an `ApiError` body whose
    `message` and `issues[].message` are descriptors (R13.5).
 

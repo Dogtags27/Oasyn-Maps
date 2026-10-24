@@ -2,7 +2,7 @@
   "kind": "sample",
   "endpoint": "GET /api/meta",
   "response": {
-    "contractVersion": "0.1.0",
+    "contractVersion": "0.2.0",
     "nodes": 0,
     "edges": 0,
     "layers": [

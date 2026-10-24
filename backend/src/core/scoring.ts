@@ -47,6 +47,29 @@ export function rank(ctx: PlanContext, routes: EngineRoute[]): ScoredRoute[] {
   return scored;
 }
 
+export interface RouteMetrics {
+  timeSec: number;
+  personalHeat: number;
+  safetyMax: number;
+}
+
+/**
+ * Pairwise J for the reroute decision, both routes normalised by the SAME
+ * reference (the candidate/optimal remaining route). Used by /api/replan to
+ * compare the walker's committed remaining route against the optimal one:
+ *
+ *   J(r) = w_t * T_r/T_ref + w_h * X_r/X_ref + w_s * S_r
+ *
+ * With the candidate as the reference, J_candidate reduces to w_t + w_h + w_s*S,
+ * and J_current >= J_candidate whenever the candidate is genuinely better.
+ */
+export function pairwiseJ(mode: PlanContext["mode"], r: RouteMetrics, ref: RouteMetrics): number {
+  const w = modeWeights[mode];
+  const tRef = Math.max(1e-6, ref.timeSec);
+  const xRef = Math.max(1e-6, ref.personalHeat);
+  return w.w_t * (r.timeSec / tRef) + w.w_h * (r.personalHeat / xRef) + w.w_s * r.safetyMax;
+}
+
 /** Coolest route within the detour cap and hard safety (LARAC-style pick). */
 export function coolestWithinCap(ctx: PlanContext, routes: EngineRoute[]): EngineRoute | null {
   if (routes.length === 0) return null;

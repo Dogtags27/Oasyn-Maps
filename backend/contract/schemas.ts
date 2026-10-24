@@ -11,8 +11,13 @@
 
 import { z } from "zod";
 
-/** Contract version. Bump on any breaking change (R13.7). */
-export const CONTRACT_VERSION = "0.1.0";
+/**
+ * Contract version. Bump the MAJOR on any breaking change (R13.7); additive
+ * changes (new optional fields/endpoints) bump the MINOR.
+ * 0.2.0 — added optional ReplanRequest.current (remaining committed-route
+ *         metrics) enabling the hysteresis reroute offer. Additive/non-breaking.
+ */
+export const CONTRACT_VERSION = "0.2.0";
 
 // ---------------------------------------------------------------------------
 // Primitives and shared types
@@ -248,6 +253,22 @@ export type PlanResponse = z.infer<typeof PlanResponse>;
 // POST /api/replan  (R13.2)
 // ---------------------------------------------------------------------------
 
+/**
+ * Metrics of the route the walker is currently committed to, measured for the
+ * REMAINING portion from `position` to `goal`. The frontend echoes these from
+ * the originally planned RouteResult so the backend can decide whether a better
+ * route warrants a reroute offer (J_new < (1-eps)*J_current). Optional and
+ * additive (R13.7): when omitted, the backend emits only the safety offer.
+ */
+export const CurrentRouteMetrics = z.object({
+  timeSec: z.number().min(0),
+  heatMinutes: z.number().min(0),
+  /** pf-weighted heat-minutes (the frontier objective X); optional. */
+  personalHeat: z.number().min(0).optional(),
+  safetyMax: z.number().min(0).max(1),
+});
+export type CurrentRouteMetrics = z.infer<typeof CurrentRouteMetrics>;
+
 export const ReplanRequest = z.object({
   goal: LatLng,
   position: LatLng,
@@ -255,6 +276,8 @@ export const ReplanRequest = z.object({
   scenario: Scenario,
   /** snooze keys the user has silenced. */
   snoozed: z.array(z.string()).default([]),
+  /** remaining committed-route metrics, for the hysteresis reroute offer (R8.3). */
+  current: CurrentRouteMetrics.optional(),
 });
 export type ReplanRequest = z.infer<typeof ReplanRequest>;
 

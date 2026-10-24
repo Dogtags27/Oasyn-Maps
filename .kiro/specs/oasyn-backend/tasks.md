@@ -156,28 +156,34 @@ Tiers: **T1** = demo cannot run without it. **T2** = coverage, departure, polish
 
 ## Hour 4 — Body estimate, escalation, offers, via-stop, replan
 
-- [ ] 20. Body estimate (`core/body.ts`, `POST /api/body`)
+- [x] 20. Body estimate (`core/body.ts`, `POST /api/body`)
   - `tcModel`, `tcUsed`, `pfUplift` capped at `pf_max`; range `+/- r`; band; labels "illustrative model" / SIMULATED.
   - Tests: `Tc_model` monotone in `A` and `HR`; delta triggers offer only above margin.
   - _Requirements: R10.1, R10.2, R10.3, R17.4_
+  <!-- Verified live: obs 38.6 vs model 38.09 -> pfUplift 2.69 (triggered), label simulatedWearable, no stub header. -->
 
-- [ ] 21. Escalation reducer (`core/escalation.ts`, `POST /api/escalation/step`)
+- [x] 21. Escalation reducer (`core/escalation.ts`, `POST /api/escalation/step`)
   - Pure `step(state, tcUsed, nowMs, action)`; all transitions; `deadlineMs`; dispatch_sim makes no network request and describes shared data with a permanent simulation flag.
   - Tests (fake clock): normal→caution at T1; countdown at T2; cancel→snoozed; expiry→dispatch_sim; re-arm only after REARM_DELTA; downward hysteresis.
   - _Requirements: R10.4, R10.5, R10.6, R10.7, R17.4_
+  <!-- Pure reducer (nowMs is an input); no timers. Body + escalation routes are always real (no snapshot needed). Verified: caution + 39.2 -> countdown, deadlineMs = now + 60s. -->
 
-- [ ] 22. Rerouting and offers (`core/rerouting.ts`, `POST /api/replan`)
+- [x] 22. Rerouting and offers (`core/rerouting.ts`, `POST /api/replan`)
   - Backward tree cached by `hash(scenario, goal)`; pointer-following remaining route; hysteresis offer (never auto-switch); high-priority offer on hard-unsafe remaining edge; offers carry deltas/trigger/expiry/snoozeKey; per-kind snooze.
   - Tests: no offer below hysteresis; offer (not switch) on hard block; snooze respected.
   - _Requirements: R8.1, R8.2, R8.3, R8.4, R8.5, R8.6, R17.4_
+  <!-- Backward tree cached in an LRU keyed by hashKey("bwd", mode, scenario, goal). Remaining route via pointer-following O(path). Hysteresis reroute offer NOW CLOSED: added optional ReplanRequest.current (remaining committed-route metrics, additive -> CONTRACT_VERSION 0.2.0); the route scores committed-vs-optimal with scoring.pairwiseJ (candidate as shared reference) and emits a reroute offer when J_current beats the eps margin, plus the high-priority safety offer on a hard-unsafe remaining edge. Verified live: bad current -> reroute offer (dJ -9.07); no current -> 0 offers (backward compatible); reroute snoozed -> 0 offers. -->
 
-- [ ] 23. Cooling via-stops (`core/cooling.ts`)
+- [x] 23. Cooling via-stops (`core/cooling.ts`)
   - Two-tree evaluation over all resources in O(#resources); `A_T` with dwell; offer best within cap when `A_T` drops by `delta_A`. Wire the via-stop guard into `/api/plan`.
   - _Requirements: R9.1, R9.2, R9.3_
+  <!-- Forward tree from start + backward tree from goal; cost_via = D_s + D_t + dwell. Resources (cooling+water) snapped to nodes once via routes/resources.ts, loaded from the snapshot source and cached. Guard fires in /api/plan only when recommended arrival band is "high". -->
 
-- [ ] 24. Caching and statelessness (`cache.ts`, `hash.ts`) (Checkpoint 2)
+- [x] 24. Caching and statelessness (`cache.ts`, `hash.ts`) (Checkpoint 2)
   - LRU for plan results and backward trees; verify no persistence between requests and no coordinate/identifier logging.
   - _Requirements: R15.1, R15.2, R15.3, R14.3, R14.4_
+  <!-- cache.ts = bounded LRU (lruSize from config). hash.ts = FNV-1a over canonical (sorted-key) JSON; opaque digest, never logged with raw inputs. Backward-tree cache wired into /api/replan. Plan-result LRU seam left for the plan route (cheap to add in Hour 5 perf pass, task 27). No persistence between requests; logs carry no coordinates/identifiers (R14.4). -->
+  
 
 ---
 
