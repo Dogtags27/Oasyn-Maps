@@ -27,6 +27,9 @@ import { getMeta } from "./routes/meta.js";
 import { getConfig } from "./routes/config.js";
 import { makeLayersRoute } from "./routes/layers.js";
 import { makePlanRoute } from "./routes/plan.js";
+import { makeReplanRoute } from "./routes/replan.js";
+import { postBody } from "./routes/body.js";
+import { postEscalationStep } from "./routes/escalation.js";
 import type { Snapshot } from "./snapshot.js";
 
 /**
@@ -119,15 +122,18 @@ export function createServer(snapshot?: Snapshot) {
     });
   };
 
+  // Body and escalation are pure (no snapshot needed) — always real.
+  app.post("/api/body", postBody);
+  app.post("/api/escalation/step", postEscalationStep);
+
   if (snapshot) {
-    // Real plan pipeline (Checkpoint 1) — no stub header.
+    // Real engine endpoints (no stub header).
     app.post("/api/plan", makePlanRoute(snapshot));
+    app.post("/api/replan", makeReplanRoute(snapshot));
   } else {
     post("/api/plan", PlanRequest, "plan");
+    post("/api/replan", ReplanRequest, "replan");
   }
-  post("/api/replan", ReplanRequest, "replan");
-  post("/api/body", BodyRequest, "body");
-  post("/api/escalation/step", EscalationRequest, "escalation");
   post("/api/coverage", CoverageRequest, "coverage");
   post("/api/departure", DepartureRequest, "departure");
 

@@ -21,6 +21,9 @@ import { aTrace, band, initA0 } from "../core/exposure.js";
 import { heatMin } from "../core/env.js";
 import { edgeTime } from "../core/cost.js";
 import { noPath as noPathDesc, warnSafetyMaskDropped } from "../core/descriptors.js";
+import { viaStops } from "../core/cooling.js";
+import { loadResources } from "./resources.js";
+import type { Offer } from "../../contract/schemas.js";
 import { zodToApiError, sendError } from "./error.js";
 
 const isDev = process.env.NODE_ENV !== "production";
@@ -86,7 +89,7 @@ function toRouteResult(
 /** Factory: returns a POST /api/plan handler bound to the loaded snapshot. */
 export function makePlanRoute(snap: Snapshot) {
   const graph: GraphView = buildGraphView(snap);
-  return (req: Request, res: Response): void => {
+  return async (req: Request, res: Response): Promise<void> => {
     const parsed = PlanRequest.safeParse(req.body);
     if (!parsed.success) {
       const body = zodToApiError(parsed.error);
@@ -123,10 +126,20 @@ export function makePlanRoute(snap: Snapshot) {
       const recommendedId =
         results.find((rr, i) => out.routes[i]!.route === recommended)?.id ?? null;
 
+      // Via-stop guard (R9.3): only when projected arrival exposure is high.
+      const offers: Offer[] = [];
+      if (recommended && band(recommended.aEnd) === "high") {
+        const fromNode = graph.snapNode(from.lat, from.lng);
+        const toNode = graph.snapNode(to.lat, to.lng);
+        const resources = await loadResources(snap, graph);
+        const via = viaStops(out.ctx, fromNode, toNode, resources, recommended, A0, resolved.timeMs);
+        if (via) offers.push(via.offer);
+      }
+
       const body = {
         routes: results,
         recommendedId,
-        offers: [],
+        offers,
         ...(out.safetyMaskDropped ? { warning: warnSafetyMaskDropped() } : {}),
       };
 

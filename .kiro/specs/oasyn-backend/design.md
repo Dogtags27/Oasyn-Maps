@@ -217,6 +217,7 @@ Transitions per `math.md` section 11: normal → caution at `T1`; caution → co
 ### 8.1 Contract (`contract/`) — the only shared surface
 
 - `schemas.ts`: zod for `Meta`, `Config`, `Presets`, `LayerResponse`, `PlanRequest`/`PlanResponse`, `ReplanRequest`/`ReplanResponse`, `BodyRequest`/`BodyResponse`, `EscalationRequest`/`EscalationResponse`, `CoverageRequest`/`CoverageResponse`, `DepartureRequest`/`DepartureResponse`, `ApiError`, `Descriptor`, `Scenario`, `Zone`, `LatLng`, `RouteResult`, `Offer`, `RerouteEvent`, `OasisHit`, `Turn`. `CONTRACT_VERSION` exported here.
+  - **Versioning:** breaking change bumps the major, additive change bumps the minor (R13.7). `0.2.0` added optional `ReplanRequest.current` (remaining committed-route metrics) so `/api/replan` can emit the hysteresis reroute offer (R8.3) by comparing the committed route against the optimal remaining via `scoring.pairwiseJ`. Omitting `current` preserves the prior safety-offer-only behaviour.
 - `messages.json`: every descriptor key the backend can emit with example vars. Frontend-owned label keys (`mode.*`, `preset.*`, `trip.*`) are documented as owned by the frontend.
 - `fixtures/*.json`: one validated sample response per endpoint, `kind: "sample"`, illustrative Back Bay / Northeastern geometry, cooling/water named "Sample ...".
 
