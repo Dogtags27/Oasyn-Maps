@@ -32,6 +32,7 @@ import { makeCoverageRoute } from "./routes/coverage.js";
 import { makeDepartureRoute } from "./routes/departure.js";
 import { postBody } from "./routes/body.js";
 import { postEscalationStep } from "./routes/escalation.js";
+import { makeSearchRoute } from "./routes/search.js";
 import type { Snapshot } from "./snapshot.js";
 
 /**
@@ -92,6 +93,7 @@ export function createServer(snapshot?: Snapshot) {
         "GET  /api/config",
         "GET  /api/presets",
         "GET  /api/layers/:name",
+        "GET  /api/search?q=",
         "POST /api/plan",
         "POST /api/replan",
         "POST /api/body",
@@ -106,6 +108,9 @@ export function createServer(snapshot?: Snapshot) {
 
   app.get("/api/meta", makeMetaRoute(snapshot));
   app.get("/api/config", getConfig);
+  // Start/destination lookup: snapshot layers + bbox-limited OSM geocoder.
+  // Works without a snapshot too (geocoder only).
+  app.get("/api/search", makeSearchRoute(snapshot));
 
   app.get("/api/presets", (_req: Request, res: Response) => {
     stub(res).json(fixture("presets"));

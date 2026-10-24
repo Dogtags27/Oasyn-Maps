@@ -28,6 +28,8 @@ import {
   PresetsResponse,
   LayerResponse,
   LayerName,
+  SearchRequest,
+  SearchResponse,
 } from "./types";
 import type {
   PlanRequestT,
@@ -47,8 +49,9 @@ import type {
   PresetsResponseT,
   LayerResponseT,
   LayerNameT,
+  SearchResponseT,
 } from "./types";
-import { resolveSample, resolveLayerSample, mockEscalationStep } from "./mock";
+import { resolveSample, resolveLayerSample, mockEscalationStep, mockSearch } from "./mock";
 import { viewConfig } from "@/config";
 
 export type ClientMode = "mock" | "live";
@@ -73,11 +76,14 @@ function envMode(): ClientMode {
   return m === "live" ? "live" : "mock";
 }
 
+/** Production backend, used when VITE_API_BASE is not set at build time. */
+const DEFAULT_API_BASE = "https://oasyn.duckdns.org";
+
 function envBase(): string {
-  return (
-    (import.meta.env?.VITE_API_BASE as string | undefined) ??
-    "https://oasyn-maps.onrender.com"
-  );
+  const raw = (import.meta.env?.VITE_API_BASE as string | undefined)?.trim();
+  // Tolerate a trailing slash in the env value ("https://x/" + "/api/..." would
+  // otherwise produce a "//api" path).
+  return (raw || DEFAULT_API_BASE).replace(/\/+$/, "");
 }
 
 export class ApiClient {
@@ -179,6 +185,29 @@ export class ApiClient {
         ? resolveLayerSample<LayerResponseT>(name)
         : await this.live(() => this.get<LayerResponseT>(`/api/layers/${name}`));
     return LayerResponse.parse(raw);
+  }
+
+  /**
+   * Start/destination lookup. `channel` lets the start and destination fields
+   * search independently while each still drops its own stale answers.
+   */
+  async search(
+    q: string,
+    opts?: { limit?: number; lang?: string; channel?: string },
+  ): Promise<SearchResponseT> {
+    const channel = `search:${opts?.channel ?? "default"}`;
+    const id = this.nextId(channel);
+    const req = SearchRequest.parse({ q, limit: opts?.limit, lang: opts?.lang });
+    let raw: SearchResponseT;
+    if (this.mode === "mock") {
+      raw = mockSearch(req.q, req.limit);
+    } else {
+      const params = new URLSearchParams({ q: req.q, limit: String(req.limit) });
+      if (req.lang) params.set("lang", req.lang);
+      raw = await this.live(() => this.get<SearchResponseT>(`/api/search?${params}`));
+    }
+    this.assertFresh(channel, id);
+    return SearchResponse.parse(raw);
   }
 
   // --- planning channels -------------------------------------------------

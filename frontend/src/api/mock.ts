@@ -13,6 +13,8 @@
 import type {
   EscalationStateT,
   EscalationResponseT,
+  SearchResponseT,
+  SearchResultT,
 } from "./types";
 
 type SampleFile = { kind?: string; endpoint?: string; response: unknown };
@@ -66,12 +68,55 @@ export function resolveSample<T = unknown>(name: string): T {
 
 /** Resolve a per-layer sample, e.g. layer "cooling" -> "layers.cooling". */
 export function resolveLayerSample<T = unknown>(layer: string): T {
-  // Backend ships a single layers.json fixture; the seed ships one per layer.
+  // A layer-specific sample always wins. The backend's single generic
+  // layers.json fixture (an empty cooling layer) is only a last resort;
+  // preferring it hid every per-layer seed and left the sample map and the
+  // place search empty.
   if (`layers.${layer}` in fixtures) return fixtures[`layers.${layer}`].response as T;
-  if ("layers" in fixtures) return fixtures["layers"].response as T;
   if (`layers.${layer}` in seeds) return seeds[`layers.${layer}`].response as T;
+  if ("layers" in fixtures) return fixtures["layers"].response as T;
   if ("layers" in seeds) return seeds["layers"].response as T;
   throw new Error(`No sample layer data for "${layer}".`);
+}
+
+/**
+ * Sample-mode place search: a case-insensitive match over the sample places,
+ * parks, and cooling layers, shaped exactly like GET /api/search.
+ */
+export function mockSearch(q: string, limit: number): SearchResponseT {
+  const needle = q.trim().toLowerCase();
+  const out: SearchResultT[] = [];
+  const layers: Array<[string, SearchResultT["kind"]]> = [
+    ["places", "place"],
+    ["parks", "park"],
+    ["cooling", "cooling"],
+  ];
+  for (const [layer, kind] of layers) {
+    let features: Array<Record<string, unknown>> = [];
+    try {
+      features = resolveLayerSample<{ features: Array<Record<string, unknown>> }>(layer).features;
+    } catch {
+      continue;
+    }
+    features.forEach((f, i) => {
+      const props = (f.properties ?? {}) as { id?: string; name?: string };
+      const geom = f.geometry as { type?: string; coordinates?: unknown } | undefined;
+      if (!props.name || !props.name.toLowerCase().includes(needle)) return;
+      let lng: number | undefined;
+      let lat: number | undefined;
+      if (geom?.type === "Point") [lng, lat] = geom.coordinates as number[];
+      else if (geom?.type === "Polygon") [lng, lat] = (geom.coordinates as number[][][])[0]?.[0] ?? [];
+      if (typeof lat !== "number" || typeof lng !== "number") return;
+      out.push({
+        id: `${layer}:${props.id ?? i}`,
+        name: props.name,
+        at: { lat, lng },
+        kind,
+        source: "local",
+      });
+    });
+  }
+  return { query: q, results: out.slice(0, limit), degraded: false };
 }
 
 /**

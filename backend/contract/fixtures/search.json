@@ -1,0 +1,33 @@
+{
+  "kind": "sample",
+  "endpoint": "GET /api/search?q=",
+  "response": {
+    "query": "fenway",
+    "results": [
+      {
+        "id": "osm:W14995585",
+        "name": "Fenway Park",
+        "detail": "4 Jersey Street, Boston",
+        "at": { "lat": 42.3464614, "lng": -71.0970999 },
+        "kind": "poi",
+        "source": "geocoder"
+      },
+      {
+        "id": "places:node/158840000",
+        "name": "Fenway",
+        "at": { "lat": 42.3429, "lng": -71.1003 },
+        "kind": "place",
+        "source": "local"
+      },
+      {
+        "id": "osm:W2000000",
+        "name": "Northeastern University",
+        "detail": "360 Huntington Avenue, Boston",
+        "at": { "lat": 42.338953, "lng": -71.0880556 },
+        "kind": "poi",
+        "source": "geocoder"
+      }
+    ],
+    "degraded": false
+  }
+}

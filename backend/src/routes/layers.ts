@@ -25,7 +25,8 @@ const localDataDir = join(here, "..", "..", "data");
 /** In-process cache of loaded layer FeatureCollections, by layer name. */
 const cache = new Map<string, unknown[]>();
 
-async function loadLayerFeatures(snap: Snapshot, name: string): Promise<unknown[]> {
+/** Load (and cache) a layer's features. Shared with the search index. */
+export async function loadLayerFeatures(snap: Snapshot, name: string): Promise<unknown[]> {
   const cached = cache.get(name);
   if (cached) return cached;
 

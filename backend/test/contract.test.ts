@@ -22,6 +22,7 @@ import {
   EscalationResponse,
   CoverageResponse,
   DepartureResponse,
+  SearchResponse,
   Descriptor,
 } from "../contract/schemas.js";
 
@@ -45,6 +46,7 @@ const cases: Array<[string, ZodTypeAny]> = [
   ["escalation", EscalationResponse],
   ["coverage", CoverageResponse],
   ["departure", DepartureResponse],
+  ["search", SearchResponse],
 ];
 
 describe("fixtures validate against their schema (R13.8)", () => {
