@@ -10,17 +10,6 @@
       "kind": "sample",
       "notes": "Illustrative Back Bay points; status unknown, not authoritative real-time data."
     },
-    "features": [
-      {
-        "type": "Feature",
-        "geometry": { "type": "Point", "coordinates": [-71.0850, 42.3445] },
-        "properties": { "id": "sample-cc-1", "name": "Sample Cooling Center", "status": "unknown", "simulated": true }
-      },
-      {
-        "type": "Feature",
-        "geometry": { "type": "Point", "coordinates": [-71.0875, 42.3412] },
-        "properties": { "id": "sample-fountain-1", "name": "Sample Fountain", "status": "unknown", "simulated": true }
-      }
-    ]
+    "features": []
   }
 }

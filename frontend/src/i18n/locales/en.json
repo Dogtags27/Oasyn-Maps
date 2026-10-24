@@ -61,6 +61,12 @@
   "trip.startWalk": "Start",
   "trip.searchPlaces": "Search places",
   "trip.noResults": "No matching places.",
+  "trip.whereTo": "Where to?",
+  "trip.planTrip": "Plan a trip",
+  "trip.swap": "Swap start and destination",
+  "trip.pinDropped": "Pin dropped",
+  "trip.searchExpanded": "Trip search expanded.",
+  "trip.searchCollapsed": "Trip search collapsed.",
 
   "app.name": "Oasyn Maps",
   "app.tagline": "Heat-aware navigation for a hotter world.",

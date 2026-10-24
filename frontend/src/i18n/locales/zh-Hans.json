@@ -61,6 +61,12 @@
   "trip.startWalk": "开始",
   "trip.searchPlaces": "搜索地点",
   "trip.noResults": "没有匹配的地点。",
+  "trip.whereTo": "要去哪里?",
+  "trip.planTrip": "规划行程",
+  "trip.swap": "交换起点和目的地",
+  "trip.pinDropped": "已放置标记",
+  "trip.searchExpanded": "行程搜索已展开。",
+  "trip.searchCollapsed": "行程搜索已收起。",
 
   "app.name": "Oasyn Maps",
   "app.tagline": "为更炎热的世界提供关注高温的导航。",

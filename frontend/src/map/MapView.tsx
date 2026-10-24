@@ -13,7 +13,7 @@ import { viewConfig } from "@/config";
 import { useStore } from "@/store";
 import { useT } from "@/i18n/useLocale";
 import {
-  CARTO_POSITRON_URL,
+  cartoTileUrl,
   CARTO_ATTRIBUTION,
   CARTO_SUBDOMAINS,
   MAX_ZOOM,
@@ -51,7 +51,7 @@ export function MapView({ children, onMapClick }: MapViewProps) {
       attributionControl: true,
     });
 
-    const tiles = L.tileLayer(CARTO_POSITRON_URL, {
+    const tiles = L.tileLayer(cartoTileUrl(), {
       attribution: CARTO_ATTRIBUTION,
       subdomains: CARTO_SUBDOMAINS,
       maxZoom: MAX_ZOOM,
