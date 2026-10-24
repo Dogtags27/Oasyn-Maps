@@ -154,6 +154,10 @@
   "watch.alert.reroute": "Percorso più fresco disponibile",
   "watch.alert.break": "Consigliata una pausa per rinfrescarsi",
   "watch.haptic": "aptica: {pattern}",
+  "watch.face": "Quadrante",
+  "watch.bpm": "BPM",
+  "watch.temp": "Temp.",
+  "watch.steps": "Passi",
 
   "lab.title": "Laboratorio",
   "lab.controls": "Controlli",

@@ -98,7 +98,7 @@
 
   /* layout */
   --topbar-h: 60px;
-  --tabbar-h: 68px;
+  --tabbar-h: 60px;
 
   /* the exposure ramp, read redundantly with pattern + text */
   --ramp-low: var(--necklace);

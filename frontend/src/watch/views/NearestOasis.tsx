@@ -34,7 +34,7 @@ export function NearestOasis() {
 
   const oasis = route?.oases?.[0] ?? null;
   if (!oasis) {
-    return <div className="watch-view">{t("watch.nearestOasis")}</div>;
+    return <div className="watch-view watch-empty">{t("watch.statusUnknown")}</div>;
   }
 
   const minutes = oasis.distanceM / cfg.walkSpeedMps / 60;
