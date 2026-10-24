@@ -16,7 +16,7 @@ import {
 import { ApiClient } from "./client";
 import { useStore } from "@/store";
 
-const ClientContext = createContext<ApiClient | null>(null);
+export const ClientContext = createContext<ApiClient | null>(null);
 
 export function ClientProvider({ children }: { children: ReactNode }) {
   const setConfig = useStore((s) => s.setConfig);
