@@ -28,7 +28,15 @@ export function MediaFigure({ slot }: { slot: MediaSlot }) {
       {slot.kind === "video" ? (
         <video className="media__asset" src={slot.src} muted loop autoPlay playsInline aria-label={alt} />
       ) : (
-        <img className="media__asset" src={slot.src} alt={alt} />
+        <img
+          className="media__asset"
+          src={slot.src}
+          alt={alt}
+          width={1280}
+          height={800}
+          loading="lazy"
+          decoding="async"
+        />
       )}
       <figcaption>{caption}</figcaption>
     </figure>

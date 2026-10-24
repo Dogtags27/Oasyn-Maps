@@ -3973,8 +3973,19 @@ a {
 }
 .media__asset {
   width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  object-position: top left;
   border-radius: var(--radius);
   display: block;
+  background: var(--paper);
+  box-shadow: var(--shadow-2), 0 0 0 1px var(--line);
+  transition: transform var(--dur-3) var(--ease-out), box-shadow var(--dur-3) var(--ease-out);
+}
+.features__row:hover .media__asset {
+  transform: scale(1.02);
+  box-shadow: var(--shadow-3), 0 0 0 1px var(--line);
 }
 .media__hatch {
   width: 100%;
