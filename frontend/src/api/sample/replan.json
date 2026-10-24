@@ -1,0 +1,42 @@
+{
+  "kind": "sample",
+  "endpoint": "POST /api/replan",
+  "response": {
+    "offers": [
+      {
+        "kind": "reroute",
+        "deltaTimeSec": 40,
+        "deltaHeatMinutes": -3.1,
+        "deltaJ": -0.12,
+        "trigger": { "key": "offer.reroute.trigger", "vars": { "deltaHeatMin": 3 } },
+        "expiryMs": 1792000060000,
+        "snoozeKey": "reroute",
+        "priority": "normal",
+        "routeId": "sample-route-remaining"
+      }
+    ],
+    "remaining": {
+      "id": "sample-route-remaining",
+      "mode": "balanced",
+      "geometry": [
+        { "lat": 42.3451, "lng": -71.0858 },
+        { "lat": 42.3398, "lng": -71.0892 }
+      ],
+      "timeSec": 360,
+      "distanceM": 480,
+      "heatMinutes": 2.4,
+      "shadePct": 61,
+      "arrivalBand": "low",
+      "safetyMax": 0.12,
+      "oases": [],
+      "j": 0.44,
+      "feasible": true,
+      "turns": [
+        { "at": { "lat": 42.3451, "lng": -71.0858 }, "descriptor": { "key": "turn.straight" }, "bearingDelta": 5 },
+        { "at": { "lat": 42.3398, "lng": -71.0892 }, "descriptor": { "key": "turn.arrive" }, "bearingDelta": 0 }
+      ],
+      "aTrace": [[0, 0, 0.3], [360, 480, 0.38]],
+      "explanations": []
+    }
+  }
+}

@@ -1,0 +1,20 @@
+/*
+ * tokens/watch.css — brightened tokens on black for the watch (R8.1).
+ *
+ * The watch renders on a black background; the ramp and text brighten so they
+ * read on the small, dark canvas. Scoped to [data-watch] so it never leaks into
+ * the phone UI.
+ */
+
+[data-watch] {
+  --watch-bg: #000000;
+  --watch-text: #ffffff;
+  --watch-necklace: #4cc38a;
+  --watch-amber: #ffb020;
+  --watch-brick: #ff6a3d;
+  --watch-charles: #5ab8f0;
+  --watch-ink: #ffffff;
+
+  background: var(--watch-bg);
+  color: var(--watch-text);
+}

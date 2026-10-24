@@ -1,0 +1,14 @@
+{
+  "kind": "sample",
+  "endpoint": "POST /api/body",
+  "response": {
+    "tcModel": 37.9,
+    "tcUsed": 37.9,
+    "rangeLow": 37.5,
+    "rangeHigh": 38.3,
+    "band": "elevated",
+    "pfUplift": 1.0,
+    "label": { "key": "body.label.illustrative" },
+    "simulated": false
+  }
+}

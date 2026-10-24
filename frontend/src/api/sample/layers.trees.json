@@ -1,0 +1,36 @@
+{
+  "kind": "sample",
+  "endpoint": "GET /api/layers/trees",
+  "response": {
+    "name": "trees",
+    "provenance": {
+      "name": "Sample Street Trees",
+      "url": "https://overpass-api.de/sample",
+      "retrievedAt": "2026-10-24T00:00:00.000Z",
+      "kind": "sample",
+      "notes": "Illustrative thinned tree points for art only."
+    },
+    "features": [
+      {
+        "type": "Feature",
+        "geometry": { "type": "Point", "coordinates": [-71.0848, 42.3452] },
+        "properties": { "id": "sample-tree-1", "simulated": true }
+      },
+      {
+        "type": "Feature",
+        "geometry": { "type": "Point", "coordinates": [-71.0839, 42.3447] },
+        "properties": { "id": "sample-tree-2", "simulated": true }
+      },
+      {
+        "type": "Feature",
+        "geometry": { "type": "Point", "coordinates": [-71.0871, 42.3429] },
+        "properties": { "id": "sample-tree-3", "simulated": true }
+      },
+      {
+        "type": "Feature",
+        "geometry": { "type": "Point", "coordinates": [-71.0882, 42.3414] },
+        "properties": { "id": "sample-tree-4", "simulated": true }
+      }
+    ]
+  }
+}
