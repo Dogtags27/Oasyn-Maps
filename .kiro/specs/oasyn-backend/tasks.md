@@ -229,18 +229,21 @@ Tiers: **T1** = demo cannot run without it. **T2** = coverage, departure, polish
 
 ## Hour 6 — Tuning, fixtures, docs, Kiro evidence, stretch
 
-- [ ] 30. Regenerate fixtures from the live engine **[T1]**
+- [x] 30. Regenerate fixtures from the live engine **[T1]**
   - `npm run fixtures` writes fixtures from the real engine output so mock mode stays close to live; re-run `contract.test.ts`.
   - _Requirements: R13.8, R17.5_
+  <!-- scripts/gen-fixtures.mjs drives the real pipeline (plan/replan/body/escalation/coverage/departure) against the R2 snapshot and writes kind:"sample" fixtures with real inner-metro geometry. Contract gate re-validated (59/59). Also fixed a real perf bug this surfaced: suggestSites did a full Dijkstra per candidate (minutes) -> now a bounded Dijkstra to the within-10-min horizon (seconds); added astar.boundedDijkstra. -->
 
-- [ ] 31. Kiro evidence **[T1]**
+- [x] 31. Kiro evidence **[T1]**
   - Add backend steering (`.kiro/steering/`, scoped `inclusion: fileMatch`, `fileMatchPattern: "backend/src/core/**"`); add backend hooks (tests on save of `core/**`, descriptor-parity check); add backend `KIRO_LOG.md` lines; update the top of the root README with a "Built with Kiro" note for backend work.
   - _Requirements: R16.2_
+  <!-- Steering: .kiro/steering/backend-core.md (fileMatch backend/src/core/**) with determinism/honesty/formula rules. Hooks: .kiro/hooks/backend-core-tests-on-save.json (vitest on core/** save) + backend-descriptor-parity.json (i18n:check on messages/fixtures/descriptors save). Log: backend/KIRO_LOG.md (one line per hour). README: expanded "Built with Kiro" section covering the backend. -->
 
-- [ ] 32. Documentation and honesty pass **[T1]**
+- [x] 32. Documentation and honesty pass **[T1]**
   - Document the duality-gap limitation for coolest-within-cap; confirm every emitted layer carries provenance and every simulated feature is labelled.
   - _Requirements: R6.4, R2.3, R2.7, R7.2, R10.1_
+  <!-- Duality gap documented in scoring.coolestWithinCap docstring + backend/LIMITATIONS.md. Audited honesty invariants: layers carry provenance (meta.json -> /api/layers); zones simulated:true (schema); body illustrative/simulated label; escalation dispatch_sim flagged + no network; resources status:"unknown" (R2.7). All confirmed. -->
 
-- [ ] 33. Stretch **[T3]**
+- [ ] 33. Stretch **[T3]** — NOT done (per instruction; Hour 6 stops at task 32).
   - State-dependent exact search over `(node, bucket(A))` (`math.md` 5.4); incident-based safety kernel with recency weighting; MCP server. Only if everything above is green.
   - _Requirements: R6 (stretch), R7 (stretch)_

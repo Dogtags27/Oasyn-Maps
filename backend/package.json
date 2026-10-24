@@ -13,7 +13,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
-    "fixtures": "node -e \"console.error('fixtures: live-engine fixture generation lands in Hour 6 (task 30)'); process.exit(1)\"",
+    "fixtures": "tsx scripts/gen-fixtures.mjs",
     "build-data": "node scripts/build-data.mjs",
     "verify-snapshot": "node scripts/verify-snapshot.mjs",
     "perf-check": "tsx scripts/perf-check.mjs",

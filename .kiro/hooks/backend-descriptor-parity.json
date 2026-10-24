@@ -1,0 +1,16 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "Descriptor parity check",
+      "trigger": "PostFileSave",
+      "description": "Confirms every descriptor key referenced in fixtures exists in messages.json whenever a descriptor source, fixture, or messages file is saved.",
+      "matcher": "backend[\\\\/](contract[\\\\/](messages\\.json|fixtures[\\\\/].*)|src[\\\\/]core[\\\\/]descriptors\\.ts)$",
+      "action": {
+        "type": "command",
+        "command": "npm --prefix backend run i18n:check",
+        "timeout": 60
+      }
+    }
+  ]
+}

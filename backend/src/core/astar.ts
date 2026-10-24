@@ -152,6 +152,48 @@ export function dijkstraTree(g: GraphView, source: number, costFn: CostFn): Tree
   return multiSource(g, [source], costFn);
 }
 
+/**
+ * Bounded single-source Dijkstra: expands only while cost <= maxCost, returning
+ * the visited nodes and their distances as parallel arrays (sparse). Used by the
+ * coverage site-suggestion greedy, where a new oasis only benefits nodes within
+ * a short walking radius — a full tree per candidate would be far too slow at
+ * 200k nodes. Deterministic; ties by node id.
+ */
+export function boundedDijkstra(
+  g: GraphView,
+  source: number,
+  costFn: CostFn,
+  maxCost: number,
+): { nodes: number[]; dist: number[] } {
+  const heap = new MinHeap();
+  const seen = new Map<number, number>(); // node -> best dist (local, sparse)
+  heap.push(source, 0);
+  seen.set(source, 0);
+  const outNodes: number[] = [];
+  const outDist: number[] = [];
+
+  while (heap.size > 0) {
+    const item = heap.pop()!;
+    const u = item.node;
+    const du = item.prio;
+    // Skip stale entries (lazy decrease-key).
+    if (du > (seen.get(u) ?? Infinity)) continue;
+    outNodes.push(u);
+    outDist.push(du);
+    g.forEachNeighbour(u, (v, e) => {
+      const c = costFn(e, u, v);
+      if (!Number.isFinite(c)) return;
+      const nd = du + c;
+      if (nd > maxCost) return; // bound: never expand past the horizon
+      if (nd < (seen.get(v) ?? Infinity)) {
+        seen.set(v, nd);
+        heap.push(v, nd);
+      }
+    });
+  }
+  return { nodes: outNodes, dist: outDist };
+}
+
 /** One Dijkstra tree from many zero-distance sources (R12.1 coverage). */
 export function multiSource(g: GraphView, sources: number[], costFn: CostFn): Tree {
   const V = g.snap.V;

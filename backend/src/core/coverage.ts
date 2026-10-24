@@ -15,7 +15,7 @@
  */
 
 import type { PlanContext } from "./types.js";
-import { multiSource, dijkstraTree, type CostFn } from "./astar.js";
+import { multiSource, boundedDijkstra, type CostFn } from "./astar.js";
 import { edgeTime } from "./cost.js";
 import { coverage as covCfg } from "../config.js";
 
@@ -73,48 +73,63 @@ export interface SiteSuggestion {
  * and picks the best (ties by lower node id). Candidates are sampled on a stride
  * to keep the O(k · candidates · tree) cost bounded on the full graph.
  */
+export interface SuggestOptions {
+  /** candidate budget — how many node sites to evaluate (default from covCfg). */
+  maxCandidates?: number;
+  /** benefit horizon in minutes — a new oasis only helps within this walk (default within10). */
+  horizonMin?: number;
+}
+
+/**
+ * Greedy max-coverage site suggestions. Each candidate is evaluated with a
+ * BOUNDED Dijkstra out to `horizonMin` (a new oasis only benefits nearby nodes),
+ * which is O(local) rather than a full tree per candidate — the difference
+ * between seconds and minutes at 200k nodes. Deterministic: candidates are a
+ * fixed stride; ties by lower node id.
+ */
 export function suggestSites(
   ctx: PlanContext,
   oasisNodes: number[],
   k: number = covCfg.suggestK,
+  opts: SuggestOptions = {},
 ): SiteSuggestion[] {
   const { snap } = ctx;
+  const maxCandidates = opts.maxCandidates ?? 300;
+  const horizonSec = (opts.horizonMin ?? covCfg.within10Min) * 60;
+
   const base = oasisCoverage(ctx, oasisNodes).dMin;
-  // Working copy of nearest-oasis seconds we improve as we place sites.
-  const current = Float64Array.from(base);
+  const current = Float64Array.from(base); // improved as we place sites
   const suggestions: SiteSuggestion[] = [];
-
-  // Candidate stride: cap the candidate set so suggestions stay fast on ~200k nodes.
-  const maxCandidates = 2000;
-  const stride = Math.max(1, Math.floor(snap.V / maxCandidates));
-
   const costFn = timeCostFn(ctx);
+  const stride = Math.max(1, Math.floor(snap.V / maxCandidates));
 
   for (let round = 0; round < k; round++) {
     let bestNode = -1;
     let bestBenefit = 0;
-    // Evaluate each candidate: a forward tree from the candidate gives d(candidate, m).
     for (let c = 0; c < snap.V; c += stride) {
       if (!Number.isFinite(current[c]!)) continue; // unreachable area
-      const tree = dijkstraTree(ctx.graph, c, costFn);
+      // Only places that are currently FAR from an oasis can benefit much; skip
+      // candidates already well-served to cut work further.
+      if (current[c]! < horizonSec * 0.25) continue;
+      const local = boundedDijkstra(ctx.graph, c, costFn, horizonSec);
       let benefit = 0;
-      const dc = tree.dist;
-      for (let m = 0; m < snap.V; m++) {
-        const improve = current[m]! - dc[m]!;
-        if (improve > 0 && Number.isFinite(dc[m]!)) benefit += improve;
+      for (let i = 0; i < local.nodes.length; i++) {
+        const m = local.nodes[i]!;
+        const improve = current[m]! - local.dist[i]!;
+        if (improve > 0) benefit += improve;
       }
-      // ties by lower node id (strict >).
       if (benefit > bestBenefit) {
         bestBenefit = benefit;
         bestNode = c;
       }
     }
     if (bestNode < 0) break;
-    suggestions.push({ node: bestNode, benefit: bestBenefit / 60 }); // minutes saved
-    // Apply the chosen site to `current` so the next round is marginal benefit.
-    const chosenTree = dijkstraTree(ctx.graph, bestNode, costFn);
-    for (let m = 0; m < snap.V; m++) {
-      if (chosenTree.dist[m]! < current[m]!) current[m] = chosenTree.dist[m]!;
+    suggestions.push({ node: bestNode, benefit: bestBenefit / 60 });
+    // Apply the chosen site to `current` (bounded) so the next round is marginal.
+    const chosen = boundedDijkstra(ctx.graph, bestNode, costFn, horizonSec);
+    for (let i = 0; i < chosen.nodes.length; i++) {
+      const m = chosen.nodes[i]!;
+      if (chosen.dist[i]! < current[m]!) current[m] = chosen.dist[i]!;
     }
   }
   return suggestions;

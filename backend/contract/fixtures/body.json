@@ -1,14 +1,17 @@
 {
   "kind": "sample",
   "endpoint": "POST /api/body",
+  "generated": "from-live-engine",
   "response": {
-    "tcModel": 37.9,
-    "tcUsed": 37.9,
-    "rangeLow": 37.5,
-    "rangeHigh": 38.3,
+    "tcModel": 38.09285714285714,
+    "tcUsed": 38.6,
+    "rangeLow": 38.2,
+    "rangeHigh": 39,
     "band": "elevated",
-    "pfUplift": 1.0,
-    "label": { "key": "body.label.illustrative" },
-    "simulated": false
+    "pfUplift": 2.6904761904761996,
+    "label": {
+      "key": "body.label.simulatedWearable"
+    },
+    "simulated": true
   }
 }

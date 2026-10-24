@@ -1,0 +1,16 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "Backend core tests on save",
+      "trigger": "PostFileSave",
+      "description": "Runs the backend vitest suite whenever a file under backend/src/core is saved, so engine property tests stay green.",
+      "matcher": "backend[\\\\/]src[\\\\/]core[\\\\/].*\\.ts$",
+      "action": {
+        "type": "command",
+        "command": "npm --prefix backend run test",
+        "timeout": 120
+      }
+    }
+  ]
+}
