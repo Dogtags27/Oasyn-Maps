@@ -220,6 +220,10 @@
   "landing.whoFor.body": "People who walk in hot cities: commuters, caregivers, outdoor workers, and visitors.",
   "landing.kiro.title": "Built with Kiro",
   "landing.kiro.body": "Specs, steering, hooks, and the CLI guided this build.",
+  "landing.kiro.spec": "Spec: requirements, design, and tasks drove each hour.",
+  "landing.kiro.steering": "Steering: always-on rules for the UI, i18n, and safety.",
+  "landing.kiro.hooks": "Hooks: content and i18n checks ran on save.",
+  "landing.kiro.cli": "CLI: the build, tests, and gates ran from one command.",
   "landing.footer.privacy": "Privacy",
   "landing.footer.about": "About",
 

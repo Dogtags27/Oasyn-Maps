@@ -220,6 +220,10 @@
   "landing.whoFor.body": "Persone che camminano in città calde: pendolari, assistenti, lavoratori all'aperto e visitatori.",
   "landing.kiro.title": "Costruito con Kiro",
   "landing.kiro.body": "Specifiche, guide, hook e la CLI hanno guidato questa costruzione.",
+  "landing.kiro.spec": "Specifica: requisiti, progettazione e attività hanno guidato ogni ora.",
+  "landing.kiro.steering": "Guide: regole sempre attive per l'interfaccia, l'i18n e la sicurezza.",
+  "landing.kiro.hooks": "Hook: i controlli di contenuto e i18n sono stati eseguiti al salvataggio.",
+  "landing.kiro.cli": "CLI: build, test e controlli eseguiti da un unico comando.",
   "landing.footer.privacy": "Privacy",
   "landing.footer.about": "Informazioni",
 

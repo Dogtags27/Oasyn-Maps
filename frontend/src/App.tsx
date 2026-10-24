@@ -9,6 +9,7 @@ import { useEffect, type ReactNode } from "react";
 import { useStore } from "@/store";
 import { ConsentCard } from "@/privacy/ConsentCard";
 import { BackendNotice } from "@/ui/BackendNotice";
+import { LiveRegions } from "@/a11y/liveRegions";
 import { useT } from "@/i18n/useLocale";
 
 export function App({ children }: { children: ReactNode }) {
@@ -42,6 +43,7 @@ export function App({ children }: { children: ReactNode }) {
       <a className="skip-link" href="#main">
         {t("a11y.skipToContent")}
       </a>
+      <LiveRegions />
       <BackendNotice />
       {children}
       <ConsentCard />

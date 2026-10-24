@@ -95,6 +95,10 @@ export interface AppSlice {
   sampleMode: boolean;
   unreachable: boolean;
   tilesFailed: boolean;
+  /** A load failure (snapshot/layer) that should surface a notice + retry. */
+  loadFailed: boolean;
+  /** Live weather failed and the Heatwave preset was substituted (R15.1). */
+  weatherFellBack: boolean;
 }
 
 export interface Store
@@ -155,6 +159,8 @@ export interface Store
   setSampleMode: (v: boolean) => void;
   setUnreachable: (v: boolean) => void;
   setTilesFailed: (v: boolean) => void;
+  setLoadFailed: (v: boolean) => void;
+  setWeatherFellBack: (v: boolean) => void;
 }
 
 const PREFS_KEY = "oasyn.prefs";
@@ -356,10 +362,14 @@ export const useStore = create<Store>((set, get) => {
     sampleMode: false,
     unreachable: false,
     tilesFailed: false,
+    loadFailed: false,
+    weatherFellBack: false,
     setConfig: (c) => set({ config: c }),
     setSampleMode: (v) => set({ sampleMode: v }),
     setUnreachable: (v) => set({ unreachable: v }),
     setTilesFailed: (v) => set({ tilesFailed: v }),
+    setLoadFailed: (v) => set({ loadFailed: v }),
+    setWeatherFellBack: (v) => set({ weatherFellBack: v }),
   };
 });
 

@@ -20,6 +20,8 @@ export function usePlan() {
   const setRoutes = useStore((s) => s.setRoutes);
   const setNoPath = useStore((s) => s.setNoPath);
   const setOffers = useStore((s) => s.setOffers);
+  const setLoadFailed = useStore((s) => s.setLoadFailed);
+  const setWeatherFellBack = useStore((s) => s.setWeatherFellBack);
 
   return useCallback(async () => {
     const { start, goal, mode, scenario } = useStore.getState();
@@ -28,6 +30,9 @@ export function usePlan() {
     setPlanning(true);
     try {
       const res = await client.plan({ from: start, to: goal, mode, scenario });
+      // A backend warning descriptor flags the Heatwave weather fallback (R15.1).
+      setWeatherFellBack(res.warning?.key === "weather.fallback.heatwave");
+      setLoadFailed(false);
       if (res.noPath) {
         // Keep prior routes; surface an inline notice (R5.6).
         setNoPath(true);
@@ -38,9 +43,10 @@ export function usePlan() {
       setOffers(res.offers);
     } catch (err) {
       if (err instanceof StaleResponseError) return; // superseded, ignore
-      // Other failures: keep prior state; resilience notices cover hard errors.
+      // Other failures: keep prior state and surface a retry notice (R15.2).
+      setLoadFailed(true);
     } finally {
       setPlanning(false);
     }
-  }, [client, setPlanning, setRoutes, setNoPath, setOffers]);
+  }, [client, setPlanning, setRoutes, setNoPath, setOffers, setLoadFailed, setWeatherFellBack]);
 }
