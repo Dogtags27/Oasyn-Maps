@@ -92,6 +92,23 @@ export const T_hi = 45; // deg C: theta = 1 at or above
 /** sigma_max — maximum per-edge shade, used for H_min admissible bound. */
 export const sigmaMax = 0.95;
 
+/**
+ * sunRampDeg — direct-beam solar load ramps from 0 at the horizon to full at
+ * this sun altitude (degrees). Keeps night and twilight from reading as full sun.
+ */
+export const sunRampDeg = 15;
+
+/**
+ * Building shade from the baked skyline (horizon.bin). For each edge and compass
+ * bin the snapshot stores the mean skyline elevation seen from the street. An
+ * edge is shaded when the sun is below that skyline in the sun's direction.
+ *   softDeg: half-width of the linear transition around the skyline, degrees
+ *            (edges are averages over several samples, so the cut-off is soft).
+ */
+export const horizonShade = {
+  softDeg: 6,
+} as const;
+
 // ---------------------------------------------------------------------------
 // Edge cost weights per mode (R5, R6)
 //   each mode differs only in (w_t, w_h, w_s, rho)
