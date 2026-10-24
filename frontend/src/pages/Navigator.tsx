@@ -26,8 +26,11 @@ import { TripControls } from "@/ui/TripControls";
 import { RouteCard } from "@/ui/RouteCard";
 import { SunModeSuggest } from "@/ui/SunModeSuggest";
 import { BackendNotice } from "@/ui/BackendNotice";
+import { OfferCard } from "@/safety/OfferCard";
+import { SafetyFlow } from "@/safety/SafetyFlow";
 import { useStore } from "@/store";
 import { usePlan } from "@/api/usePlan";
+import type { OfferT } from "@/api/types";
 
 export function Navigator() {
   const t = useT();
@@ -39,7 +42,15 @@ export function Navigator() {
   const selectedId = useStore((s) => s.selectedId);
   const recommendedId = useStore((s) => s.recommendedId);
   const selectRoute = useStore((s) => s.selectRoute);
+  const offers = useStore((s) => s.offers);
+  const dismissOffer = useStore((s) => s.dismissOffer);
   const plan = usePlan();
+
+  // Route changes only on an explicit Accept (R9.2).
+  const acceptOffer = (offer: OfferT) => {
+    if (offer.routeId) selectRoute(offer.routeId);
+    dismissOffer(offer.snoozeKey);
+  };
 
   // Plan whenever both endpoints are set (map tap or place search).
   const lastKey = useRef<string>("");
@@ -82,6 +93,13 @@ export function Navigator() {
 
         <Sheet handleLabel={t("a11y.sheetHandle")} initial="half">
           <RoutePeek />
+          {offers.length > 0 && (
+            <section className="navigator__offers" aria-live="polite">
+              {offers.map((offer) => (
+                <OfferCard key={offer.snoozeKey} offer={offer} onAccept={acceptOffer} />
+              ))}
+            </section>
+          )}
           <TripControls />
           <section className="navigator__routes" aria-live="polite">
             {routes.map((route) => (
@@ -97,6 +115,8 @@ export function Navigator() {
           <Legend />
           <DirectionsList />
         </Sheet>
+
+        <SafetyFlow body={null} location={start} />
       </main>
     </>
   );
