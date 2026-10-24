@@ -1,6 +1,6 @@
 # Tasks: Oasyn Maps backend (Person A)
 
-Person A edits `backend/`, root `package.json`, and the top of the root README only. Only Person A edits `backend/contract/`; after hour 0, contract changes are additive and announced. Each task is incremental, builds on the previous ones, and ends with tests green.
+Person A edits `backend/` and the top of the root README only. Only Person A edits `backend/contract/`; after hour 0, contract changes are additive and announced. Each task is incremental, builds on the previous ones, and ends with tests green. (Note: the backend is a self-contained, separately deployable package — there is no monorepo root `package.json`.)
 
 Tiers: **T1** = demo cannot run without it. **T2** = coverage, departure, polish. **T3** = stretch. Cut from the bottom if time runs short; never cut contract tests, escalation, offers-not-forced, i18n plumbing, or privacy/statelessness.
 
@@ -9,9 +9,11 @@ Tiers: **T1** = demo cannot run without it. **T2** = coverage, departure, polish
 ## Hour 1 — Scaffold, contract, config, data download
 
 - [x] 1. Scaffold the backend package and tooling
-  - Create `backend/package.json`, `tsconfig.json`, `vitest.config.ts`; add scripts (`dev`, `test`, `fixtures`, `lint:nohardcode`, `i18n:check`) and root `package.json` workspace wiring.
+  - Create `backend/package.json`, `tsconfig.json`, `vitest.config.ts`; add scripts (`dev`, `test`, `fixtures`, `lint:nohardcode`, `i18n:check`).
   - Create the `src/`, `contract/`, `scripts/`, `data/`, `test/` folder skeleton.
   - _Requirements: R16.1, R17_
+  <!-- Decision: backend is a self-contained, separately deployable package (own package.json + lockfile). No monorepo root package.json / workspace wiring — the original "root package.json workspace wiring" was dropped so backend and frontend deploy independently. -->
+
 
 - [x] 2. Define `config.ts` with every constant
   - Put bbox, speeds, step multiplier, `tau`, bands (`b1`, `b2`), weights per mode `(w_t, w_h, w_s, rho)`, `k0`, `alpha`, `a1..a3`, `n_t`, `n_b`, `Q_max`, `T_lo`, `T_hi`, thresholds (`T1`, `T2`, hysteresis, `S_hard`), event sizes, countdown length, `SNOOZE_MIN`, `REARM_DELTA`, `eps`, `o_max`, `delta_A`, `pf_max`, `gamma`, `m`, body constants (`Tc0`, `k_A`, `k_HR`, `r`), LRU size, grid cell size, sample step, and `seed`.
@@ -45,40 +47,58 @@ Tiers: **T1** = demo cannot run without it. **T2** = coverage, departure, polish
     - _Requirements: R2.1, R2.4, R2.7_
   - [x] 6.2 Build the raw graph, write `meta.json` provenance per layer; log node/edge counts.
     - _Requirements: R2.3, R2.5_
-  <!-- Script authored and ready; run `npm --prefix backend run build-data` manually to download + commit the snapshot (needs network). Raw-graph build, provenance, and count logging are wired; feature baking + contraction land in Hour 2 (task 7). -->
+  <!--
+  DONE + evolved beyond the original scope. Changes recorded in design.md §3.1/§8.4/§14 and R2.6:
+   - bbox expanded to Greater Boston inner metro (~600 km²); single Overpass call times out, so the fetch is TILED (4x4 grid) with per-tile retry + mirror fallback, merged by OSM id.
+   - Added a VALIDATION GATE (node/edge minimums, non-empty layers, connected-component fraction); build fails loudly and publishes nothing on failure.
+   - Snapshot is PUBLISHED TO CLOUDFLARE R2 (versioned key + latest pointer), NOT committed to git (~266 MB). Credentials from backend/.env (gitignored).
+   - Ran for real: ~806k nodes / ~909k edges, ~99% connected, published + verified (scripts/verify-snapshot.mjs).
+   - Also added (not in original Hour 1 list): Render stub deploy (render.yaml, CORS, /healthz), API_SAMPLE.md for the frontend handoff.
+  Feature baking (25 m grid hash) + degree-2 contraction remain Hour 2 (task 7).
+  -->
 
 
 ---
 
 ## Hour 2 — Graph build, contraction, features, layers, A*
 
-- [ ] 7. Bake static edge features and contract the graph (build script)
-  - [ ] 7.1 25 m grid hash; sample each edge; compute `trees`, `park`, `bldg`, and the `step` flag.
+- [x] 7. Bake static edge features and contract the graph (build script)
+  - [x] 7.1 25 m grid hash; sample each edge; compute `trees`, `park`, `bldg`, and the `step` flag.
     - _Requirements: R2.2_
-  - [ ] 7.2 Degree-2 contraction (summed length, length-weighted features, concatenated geometry); log before/after counts; commit all outputs.
+  - [x] 7.2 Degree-2 contraction (summed length, length-weighted features, concatenated geometry); log before/after counts; publish all outputs to R2 via the versioned-key + latest-pointer flow (not git — see R2.6 / design §8.4).
     - _Requirements: R1.6, R2.5, R2.6_
+  <!--
+  Optimized build: spatial grid hash per feature type (O(1) local-cell lookups, not O(E·F)); baking is scripts/lib/graph-build.mjs. Contraction 805,877->203,772 nodes (-75%), 909,343->307,238 edges (-66%), ~99% connected.
+  BINARY CSR SNAPSHOT (scripts/lib/snapshot-format.mjs, magic OSNP v1): graph.bin is 13.56 MB vs ~170 MB raw JSON (~92% smaller), loads as typed-array views (near-zero parse).
+  Reprocessing uses R2, NOT Overpass: `node scripts/build-data.mjs --from-r2` pulls the raw graph.json + layer JSONs from R2, re-bakes/contracts/encodes in ~8s and republishes. (Also: --reprocess reads a local raw cache; the full fetch now caches raw to data/.cache.)
+  Follow-up: --from-r2 reprocesses off the `latest` pointer; pin a stable RAW source key so re-runs don't chain off a contracted snapshot (idempotent today, but fragile).
+  -->
 
-- [ ] 8. Load the snapshot into CSR typed arrays (`snapshot.ts`)
-  - Convert `graph.json` to `offsets`, `targets`, `edgeOf`, per-edge `Float32Array`s (`len`, `trees`, `park`, `bldg`), runtime `heat`/`safety` arrays, `step: Uint8Array`, projected node coords. Fail fast on load error.
-  - _Requirements: R1.1, R13 (load once), R15.3_
+- [x] 8. Load the snapshot into CSR typed arrays (`snapshot.ts`)
+  - Fetch the snapshot from R2 at startup (read the `latest` pointer, download, fail fast on fetch/validation error — design §8.4), then convert to `offsets`, `targets`, `edgeOf`, per-edge `Float32Array`s (`len`, `trees`, `park`, `bldg`), runtime `heat`/`safety` arrays, `step: Uint8Array`, projected node coords.
+    - _Requirements: R1.1, R13 (load once), R15.3_
+  <!-- Binary format means the ~266 MB-JSON parse concern is moot; graph.bin is 13.56 MB and decodes as views. `loadSnapshot()` supports r2 (default when creds present) / local / STUB_ONLY. Server boots live from R2: "snapshot loaded: 203772 nodes, 307238 edges (r2)". -->
 
-- [ ] 9. Graph access, grid hash, snap-to-node (`core/graph.ts`)
+- [x] 9. Graph access, grid hash, snap-to-node (`core/graph.ts`)
   - CSR neighbour iteration; build the grid-hash `Map`; `snap(latlng)` nearest node (ties by id); proximity queries for resources/features.
-  - _Requirements: R1.3_
+    - _Requirements: R1.3_
 
-- [ ] 10. A* and Dijkstra trees (`core/astar.ts`)
-  - [ ] 10.1 Binary heap with lazy decrease-key and `settled` bitmap; `astar(from, to, costFn, hFn)` stopping on goal pop; ties by id.
+- [x] 10. A* and Dijkstra trees (`core/astar.ts`)
+  - [x] 10.1 Binary heap with lazy decrease-key and `settled` bitmap; `astar(from, to, costFn, hFn)` stopping on goal pop; ties by id.
     - _Requirements: R6.1, R6.8_
-  - [ ] 10.2 Admissible/consistent heuristic from `c_min` and equirectangular distance x0.995.
+  - [x] 10.2 Admissible/consistent heuristic from `c_min` and equirectangular distance x0.995.
     - _Requirements: R6.1_
-  - [ ] 10.3 `dijkstraTree(source, costFn)` (forward/backward) and `multiSource(sources, costFn)`.
+  - [x] 10.3 `dijkstraTree(source, costFn)` (forward/backward) and `multiSource(sources, costFn)`.
     - _Requirements: R8.1, R9.1, R12.1_
-  - [ ] 10.4 Tests: A* == Dijkstra on seeded random small graphs; blocked edges unused; contraction preserves shortest-path length.
+  - [x] 10.4 Tests: A* == Dijkstra on seeded random small graphs; blocked edges unused; contraction preserves shortest-path length.
     - _Requirements: R17.2_
+  <!-- Heuristic helper lives in core/graph.ts (equirectDist); A* applies the c_min * dist * 0.995 lower bound per-call (c_min supplied by the cost context in Hour 3). Tests in test/search.test.ts + test/snapshot-format.test.ts (22 passing total). -->
 
-- [ ] 11. Layer endpoints (`routes/layers.ts`) go live
+- [x] 11. Layer endpoints (`routes/layers.ts`) go live
   - Serve `parks|trees|water|cooling|places` from the snapshot with provenance; drop the stub header for these.
-  - _Requirements: R2.3, R13.2_
+    - _Requirements: R2.3, R13.2_
+  <!-- Optimized: layers lazy-fetched from the SAME source as the snapshot (R2/local) on first request and cached, so ~100 MB of display layers don't load at boot. Verified: /api/layers/cooling -> 200, no stub header, 35 real features, provenance.kind=real. Stub deploy (no snapshot) still returns the sample fixture. -->
+  
 
 ---
 

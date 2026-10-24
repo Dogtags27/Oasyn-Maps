@@ -9,7 +9,7 @@ The frontend is a separate spec (`.kiro/specs/oasyn-frontend`). The two sides me
 ### Scope boundary (what the backend owns)
 
 - The routing engine and all math in `backend/src/core` (graph, environment model, exposure, cost, search, rerouting, cooling stops, safety field, coverage, departure, body estimate, escalation reducer).
-- The data snapshot build script and the committed snapshot it produces.
+- The data snapshot build script and the snapshot it produces and publishes to object storage (Cloudflare R2; see R2.6).
 - The HTTP API and its contract (`backend/contract/`).
 - The headless `plan` CLI and backend tests.
 - Backend-side Kiro evidence (steering for `backend/src/core/**`, this spec, backend hooks, `KIRO_LOG.md` entries for backend work).
@@ -44,7 +44,7 @@ Heat exposure is **estimated** from available data, not measured. Personal expos
 1. THE SYSTEM SHALL load a committed, degree-2-contracted OSM walking-graph snapshot into CSR typed-array form (`offsets`, `targets`, `edgeOf`, and per-edge `len`, `trees`, `park`, `bldg`, `heat`, `safety`) at server start.
 2. THE SYSTEM SHALL route on the contracted graph in the backend engine and expose results only through the documented API contract.
 3. WHEN a request supplies start and goal coordinates THE SYSTEM SHALL snap each to the nearest graph node using the spatial grid hash.
-4. THE SYSTEM SHALL return ranked routes within 50 ms of compute time for the committed snapshot on a typical dev machine.
+4. THE SYSTEM SHALL return ranked routes within 50 ms of compute time for the loaded snapshot on a typical dev machine.
 5. IF no path exists between the snapped start and goal THE SYSTEM SHALL return a structured, frontend-renderable "no path" result (descriptor, not a sentence) and SHALL NOT throw.
 6. THE SYSTEM SHALL preserve shortest-path lengths through degree-2 contraction (contraction is lossless for routing).
 
@@ -59,7 +59,7 @@ Heat exposure is **estimated** from available data, not measured. Personal expos
 3. THE SYSTEM SHALL record provenance in `meta.json` for every layer (name, url, retrievedAt, kind, notes).
 4. WHEN the primary Overpass endpoint fails THE SYSTEM SHALL fall back to the configured mirror.
 5. THE SYSTEM SHALL log node and edge counts before and after contraction.
-6. THE SYSTEM SHALL commit the generated snapshot outputs so the engine runs without a live download.
+6. THE SYSTEM SHALL publish the validated snapshot outputs to object storage (Cloudflare R2, S3-compatible) under a versioned key and advance a `latest` pointer only after a validation gate passes, so the engine runs without a live Overpass download. (Changed from "commit to git": at inner-metro scale the snapshot is ~266 MB and does not belong in git; the backend fetches it from R2 at startup. The validation gate — node/edge minimums, non-empty layers, largest-connected-component fraction — guards against Overpass silent-partial-success, and the pointer only advances on success so a bad build never replaces a good one.)
 7. THE SYSTEM SHALL label cooling-center and fountain sample records so they are not mistaken for authoritative real-time facility data (status defaults to "unknown" unless the source says otherwise).
 
 ### R3 Environment model (shade and heat rate)

@@ -25,8 +25,15 @@ import { fixture } from "./routes/fixtures.js";
 import { apiError, sendError, stub, zodToApiError } from "./routes/error.js";
 import { getMeta } from "./routes/meta.js";
 import { getConfig } from "./routes/config.js";
+import { makeLayersRoute } from "./routes/layers.js";
+import type { Snapshot } from "./snapshot.js";
 
-export function createServer() {
+/**
+ * Build the app. When a loaded `snapshot` is supplied, the layer endpoints go
+ * live from it (R2.3, R11); otherwise they stay stubbed (the Render test deploy
+ * runs with no snapshot). Routing endpoints remain stubbed until Hour 3.
+ */
+export function createServer(snapshot?: Snapshot) {
   const app = express();
 
   // CORS: the frontend calls from a different origin. For the shared test
@@ -74,17 +81,20 @@ export function createServer() {
     stub(res).json(fixture("presets"));
   });
 
-  app.get("/api/layers/:name", (req: Request, res: Response) => {
-    const parsed = LayerName.safeParse(req.params.name);
-    if (!parsed.success) {
-      res
-        .status(400)
-        .json(apiError(400, "UNKNOWN_LAYER", "error.unknownLayer", undefined));
-      return;
-    }
-    // Hour 1: single sample layer fixture regardless of name.
-    stub(res).json(fixture("layers"));
-  });
+  if (snapshot) {
+    // Live layers from the snapshot (R11) — no stub header.
+    app.get("/api/layers/:name", makeLayersRoute(snapshot));
+  } else {
+    // No snapshot (stub deploy): single sample layer fixture regardless of name.
+    app.get("/api/layers/:name", (req: Request, res: Response) => {
+      const parsed = LayerName.safeParse(req.params.name);
+      if (!parsed.success) {
+        res.status(400).json(apiError(400, "UNKNOWN_LAYER", "error.unknownLayer", undefined));
+        return;
+      }
+      stub(res).json(fixture("layers"));
+    });
+  }
 
   // --- POST endpoints (validate request, return fixture) ---------------------
 
@@ -128,9 +138,30 @@ export function createServer() {
 const entry = process.argv[1] ? fileURLToPath(import.meta.url) === process.argv[1] : false;
 if (entry) {
   const port = Number(process.env.PORT ?? 8787);
-  const app = createServer();
-  app.listen(port, () => {
-    // Statelessness (R14.4): never log coordinates or identifiers.
-    console.log(`[oasyn] backend listening on :${port}`);
-  });
+  // STUB_ONLY=1 forces the fixture-only server (the Render test deploy uses this)
+  // so it never attempts an R2 fetch. Otherwise try to load the snapshot and go
+  // live on layers; fall back to stub mode if the snapshot is unavailable.
+  const stubOnly = process.env.STUB_ONLY === "1";
+  const boot = async () => {
+    let snapshot: Snapshot | undefined;
+    if (!stubOnly) {
+      try {
+        const { loadSnapshot } = await import("./snapshot.js");
+        snapshot = await loadSnapshot();
+        console.log(
+          `[oasyn] snapshot loaded: ${snapshot.V} nodes, ${snapshot.E} edges (${snapshot.source.kind})`,
+        );
+      } catch (err) {
+        console.warn(
+          `[oasyn] no snapshot (${(err as Error).message}); serving stub layers.`,
+        );
+      }
+    }
+    const app = createServer(snapshot);
+    app.listen(port, () => {
+      // Statelessness (R14.4): never log coordinates or identifiers.
+      console.log(`[oasyn] backend listening on :${port}${snapshot ? "" : " (stub)"}`);
+    });
+  };
+  void boot();
 }
