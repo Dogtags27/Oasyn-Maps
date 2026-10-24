@@ -1,0 +1,40 @@
+{
+  "name": "@oasyn/backend",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Oasyn Maps deterministic routing engine, environment/exposure models, and HTTP API.",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "start": "tsx src/server.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "fixtures": "node -e \"console.error('fixtures: live-engine fixture generation lands in Hour 6 (task 30)'); process.exit(1)\"",
+    "build-data": "node scripts/build-data.mjs",
+    "verify-snapshot": "node scripts/verify-snapshot.mjs",
+    "plan-cli": "node -e \"console.error('plan-cli: headless runner lands in Hour 5 (task 28)'); process.exit(1)\"",
+    "lint:nohardcode": "tsx scripts/lint-nohardcode.mjs",
+    "i18n:check": "tsx scripts/i18n-check.mjs"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.1156.0",
+    "cors": "^2.8.6",
+    "dotenv": "^16.6.1",
+    "express": "^4.21.2",
+    "suncalc": "^1.9.0",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^4.17.21",
+    "@types/node": "^22.10.5",
+    "@types/suncalc": "^1.9.2",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3",
+    "vitest": "^2.1.8"
+  }
+}

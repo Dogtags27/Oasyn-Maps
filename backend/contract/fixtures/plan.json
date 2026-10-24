@@ -1,0 +1,86 @@
+{
+  "kind": "sample",
+  "endpoint": "POST /api/plan",
+  "response": {
+    "recommendedId": "sample-route-balanced",
+    "offers": [
+      {
+        "kind": "via_stop",
+        "deltaTimeSec": 95,
+        "deltaHeatMinutes": -4.2,
+        "deltaJ": -0.08,
+        "trigger": { "key": "offer.viaStop.trigger", "vars": { "name": "Sample Cooling Center", "deltaA": 0.12 } },
+        "expiryMs": 1792000000000,
+        "snoozeKey": "via_stop",
+        "priority": "normal",
+        "routeId": "sample-route-balanced"
+      }
+    ],
+    "routes": [
+      {
+        "id": "sample-route-fastest",
+        "mode": "fastest",
+        "geometry": [
+          { "lat": 42.3480, "lng": -71.0810 },
+          { "lat": 42.3445, "lng": -71.0848 },
+          { "lat": 42.3398, "lng": -71.0892 }
+        ],
+        "timeSec": 640,
+        "distanceM": 900,
+        "heatMinutes": 9.1,
+        "shadePct": 28,
+        "arrivalBand": "elevated",
+        "safetyMax": 0.2,
+        "oases": [],
+        "j": 1.0,
+        "feasible": true,
+        "turns": [
+          { "at": { "lat": 42.3480, "lng": -71.0810 }, "descriptor": { "key": "turn.depart", "vars": { "street": "Sample St" } }, "bearingDelta": 0 },
+          { "at": { "lat": 42.3445, "lng": -71.0848 }, "descriptor": { "key": "turn.right", "vars": { "street": "Sample Ave" } }, "bearingDelta": 82 },
+          { "at": { "lat": 42.3398, "lng": -71.0892 }, "descriptor": { "key": "turn.arrive" }, "bearingDelta": 0 }
+        ],
+        "aTrace": [[0, 0, 0.21], [320, 450, 0.34], [640, 900, 0.46]],
+        "explanations": [
+          { "key": "route.explain.fastestLosesOnHeat", "vars": { "heatMin": 9 } }
+        ]
+      },
+      {
+        "id": "sample-route-balanced",
+        "mode": "balanced",
+        "geometry": [
+          { "lat": 42.3480, "lng": -71.0810 },
+          { "lat": 42.3451, "lng": -71.0858 },
+          { "lat": 42.3398, "lng": -71.0892 }
+        ],
+        "timeSec": 720,
+        "distanceM": 980,
+        "heatMinutes": 5.3,
+        "shadePct": 58,
+        "arrivalBand": "low",
+        "safetyMax": 0.15,
+        "oases": [
+          {
+            "id": "sample-cc-1",
+            "at": { "lat": 42.3445, "lng": -71.0850 },
+            "name": { "key": "oasis.cooling", "vars": { "name": "Sample Cooling Center" } },
+            "kind": "cooling",
+            "distanceM": 40,
+            "simulated": true
+          }
+        ],
+        "j": 0.82,
+        "feasible": true,
+        "turns": [
+          { "at": { "lat": 42.3480, "lng": -71.0810 }, "descriptor": { "key": "turn.depart", "vars": { "street": "Sample St" } }, "bearingDelta": 0 },
+          { "at": { "lat": 42.3451, "lng": -71.0858 }, "descriptor": { "key": "turn.slightRight", "vars": { "street": "Sample Ave" } }, "bearingDelta": 24 },
+          { "at": { "lat": 42.3398, "lng": -71.0892 }, "descriptor": { "key": "turn.arrive" }, "bearingDelta": 0 }
+        ],
+        "aTrace": [[0, 0, 0.21], [360, 500, 0.3], [720, 980, 0.38]],
+        "explanations": [
+          { "key": "route.explain.shadeDiff", "vars": { "pct": 42 } },
+          { "key": "route.explain.coolestWithinCap", "vars": { "capPct": 30 } }
+        ]
+      }
+    ]
+  }
+}

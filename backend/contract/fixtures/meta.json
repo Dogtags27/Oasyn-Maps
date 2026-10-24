@@ -1,0 +1,18 @@
+{
+  "kind": "sample",
+  "endpoint": "GET /api/meta",
+  "response": {
+    "contractVersion": "0.1.0",
+    "nodes": 0,
+    "edges": 0,
+    "layers": [
+      {
+        "name": "parks",
+        "url": "https://overpass-api.de/api/interpreter",
+        "retrievedAt": "2026-10-24T00:00:00.000Z",
+        "kind": "sample",
+        "notes": "Sample provenance; real snapshot populates this at build time."
+      }
+    ]
+  }
+}
