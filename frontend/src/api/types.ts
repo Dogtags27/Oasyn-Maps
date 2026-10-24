@@ -39,6 +39,10 @@ export {
   CoverageResponse,
   DepartureRequest,
   DepartureResponse,
+  SearchRequest,
+  SearchKind,
+  SearchResult,
+  SearchResponse,
 } from "@contract/schemas";
 
 export type {
@@ -74,4 +78,8 @@ export type {
   CoverageResponse as CoverageResponseT,
   DepartureRequest as DepartureRequestT,
   DepartureResponse as DepartureResponseT,
+  SearchRequest as SearchRequestT,
+  SearchKind as SearchKindT,
+  SearchResult as SearchResultT,
+  SearchResponse as SearchResponseT,
 } from "@contract/schemas";

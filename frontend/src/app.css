@@ -1018,55 +1018,78 @@ a {
   list-style: none;
   margin: 6px 0 0;
   padding: 0;
-  max-height: 168px;
+  max-height: 264px;
   overflow-y: auto;
   border-radius: var(--radius);
 }
-.place-search__results li {
-  animation: rise-in var(--dur-2) var(--ease-out) both;
+.place-search__results:empty {
+  display: none;
 }
-.place-search__results button {
-  width: 100%;
+.place-search__results li {
   display: flex;
   align-items: center;
   gap: 12px;
-  text-align: left;
   min-height: 48px;
   padding: 8px 12px;
   font-family: var(--font-body);
-  font-size: 15px;
-  font-weight: 600;
-  background: transparent;
   color: var(--ink);
-  border: none;
   border-radius: var(--radius-sm);
   cursor: pointer;
+  animation: rise-in var(--dur-2) var(--ease-out) both;
   transition: background-color var(--dur-1) var(--ease-out);
 }
-.place-search__results button::before {
-  content: "";
-  flex: 0 0 auto;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: var(--primary-soft);
-  box-shadow: inset 0 0 0 9px var(--primary-soft), inset 0 0 0 16px var(--primary);
-}
-.place-search__results li:nth-child(3n + 2) button::before {
-  background: var(--necklace-soft);
-  box-shadow: inset 0 0 0 9px var(--necklace-soft), inset 0 0 0 16px var(--necklace);
-}
-.place-search__results li:nth-child(3n + 3) button::before {
-  background: var(--plum-soft);
-  box-shadow: inset 0 0 0 9px var(--plum-soft), inset 0 0 0 16px var(--plum);
-}
-.place-search__results button:hover {
+.place-search__results li:hover,
+.place-search__results li.is-active {
   background: var(--surface);
 }
-.place-search__empty {
+.place-search__results li.is-active {
+  box-shadow: inset 3px 0 0 var(--primary);
+}
+/* Kind marker: a ringed dot, coloured by what the result is. */
+.place-search__kind {
+  flex: 0 0 auto;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--primary-soft);
+  box-shadow: inset 0 0 0 8px var(--primary-soft), inset 0 0 0 14px var(--primary);
+}
+.place-search__kind--park,
+.place-search__kind--water {
+  background: var(--necklace-soft);
+  box-shadow: inset 0 0 0 8px var(--necklace-soft), inset 0 0 0 14px var(--necklace);
+}
+.place-search__kind--cooling {
+  background: var(--plum-soft);
+  box-shadow: inset 0 0 0 8px var(--plum-soft), inset 0 0 0 14px var(--plum);
+}
+.place-search__text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.place-search__name {
+  font-size: 15px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.place-search__detail {
+  font-size: 13px;
+  font-weight: 500;
   color: var(--ink-2);
-  padding: 10px 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.place-search__status {
+  margin: 0;
+  color: var(--ink-2);
   font-size: 14px;
+}
+.place-search__status:not(:empty) {
+  padding: 8px 4px;
 }
 
 @media (min-width: 900px) {

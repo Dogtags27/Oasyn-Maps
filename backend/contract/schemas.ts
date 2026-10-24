@@ -16,8 +16,10 @@ import { z } from "zod";
  * changes (new optional fields/endpoints) bump the MINOR.
  * 0.2.0 — added optional ReplanRequest.current (remaining committed-route
  *         metrics) enabling the hysteresis reroute offer. Additive/non-breaking.
+ * 0.3.0 — added GET /api/search (place / park / cooling / address lookup for
+ *         start and destination). Additive/non-breaking.
  */
-export const CONTRACT_VERSION = "0.2.0";
+export const CONTRACT_VERSION = "0.3.0";
 
 // ---------------------------------------------------------------------------
 // Primitives and shared types
@@ -225,6 +227,47 @@ export const LayerResponse = z.object({
   features: z.array(z.record(z.any())),
 });
 export type LayerResponse = z.infer<typeof LayerResponse>;
+
+// ---------------------------------------------------------------------------
+// GET /api/search?q=&limit=&lang=  (start / destination lookup)
+// ---------------------------------------------------------------------------
+
+/** Query parameters (strings on the wire; coerced here). */
+export const SearchRequest = z.object({
+  q: z.string().trim().min(2).max(100),
+  limit: z.coerce.number().int().min(1).max(10).default(8),
+  /** UI language hint for geocoder labels; unknown values fall back to "en". */
+  lang: z.string().max(16).optional(),
+});
+export type SearchRequest = z.infer<typeof SearchRequest>;
+
+export const SearchKind = z.enum(["place", "park", "cooling", "water", "poi", "address"]);
+export type SearchKind = z.infer<typeof SearchKind>;
+
+/**
+ * One match. `name` and `detail` are map DATA (OSM / city GIS names and
+ * addresses, kept as mapped per R12.5), not UI sentences, so they are plain
+ * strings rather than descriptors.
+ */
+export const SearchResult = z.object({
+  id: z.string(),
+  name: z.string().min(1),
+  /** secondary line, e.g. street address or neighbourhood. */
+  detail: z.string().optional(),
+  at: LatLng,
+  kind: SearchKind,
+  /** "local" = snapshot layers; "geocoder" = OSM geocoder (Photon). */
+  source: z.enum(["local", "geocoder"]),
+});
+export type SearchResult = z.infer<typeof SearchResult>;
+
+export const SearchResponse = z.object({
+  query: z.string(),
+  results: z.array(SearchResult),
+  /** true when the geocoder was unavailable and only local data was searched. */
+  degraded: z.boolean().default(false),
+});
+export type SearchResponse = z.infer<typeof SearchResponse>;
 
 // ---------------------------------------------------------------------------
 // POST /api/plan  (R13.2)

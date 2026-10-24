@@ -124,10 +124,10 @@ export function SearchBar() {
           </div>
           <div className="search-bar__fields">
             <div className="search-bar__field">
-              <PlaceSearch label={t("trip.start")} onPick={pickStart} />
+              <PlaceSearch label={t("trip.start")} onPick={pickStart} value={startLabel} />
             </div>
             <div className="search-bar__field">
-              <PlaceSearch label={t("trip.destination")} onPick={pickGoal} />
+              <PlaceSearch label={t("trip.destination")} onPick={pickGoal} value={goalLabel} />
             </div>
           </div>
           <button

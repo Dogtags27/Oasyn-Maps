@@ -247,6 +247,52 @@ export const departure = {
 export const lruSize = 64;
 
 // ---------------------------------------------------------------------------
+// Place search (GET /api/search)
+// ---------------------------------------------------------------------------
+
+export const search = {
+  /**
+   * OSM geocoder for addresses / POIs. Photon (komoot) supports
+   * search-as-you-type under fair use; results are restricted to `bbox`.
+   * Set SEARCH_GEOCODER_URL="" to run local-only.
+   */
+  geocoderUrl: process.env.SEARCH_GEOCODER_URL ?? "https://photon.komoot.io/api/",
+  /** Per-request geocoder timeout; on timeout we return local matches only. */
+  geocoderTimeoutMs: 3500,
+  /** Identifies this service to the geocoder operator (fair-use etiquette). */
+  userAgent: "OasynMaps/0.3 (+https://oasyn.duckdns.org)",
+  /** Languages Photon can label results in; anything else falls back to "en". */
+  geocoderLangs: ["en", "de", "fr", "it"],
+  /** Cached geocoder answers (by normalised query + lang). */
+  cacheSize: 500,
+  /**
+   * Minimum gap between outgoing geocoder calls (ms), across all users.
+   * Photon throttles at ~7 req/s per IP; stay well under it.
+   */
+  minGapMs: 350,
+  /** After a geocoder 429/5xx, skip it (local-only answers) for this long. */
+  cooldownMs: 15_000,
+  /** Two results closer than this (m) with the same name are duplicates. */
+  dedupeM: 400,
+  /**
+   * OSM tag pairs dropped from geocoder results: individual stop poles and
+   * platforms flood short queries ("Fenway" x5) and are not walking
+   * destinations; the station itself is kept.
+   */
+  dropTags: [
+    "railway=stop",
+    "railway=halt",
+    "railway=platform",
+    "railway=tram_stop",
+    "railway=subway_entrance",
+    "public_transport=platform",
+    "public_transport=stop_position",
+    "highway=bus_stop",
+    "highway=platform",
+  ],
+} as const;
+
+// ---------------------------------------------------------------------------
 // Snapshot build / geometry (R2)
 // ---------------------------------------------------------------------------
 
