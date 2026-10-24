@@ -20,11 +20,20 @@
  *   Flags: --no-upload   build + validate locally, skip R2 publish.
  */
 
-import { mkdirSync, writeFileSync } from "node:fs";
+import { mkdirSync, writeFileSync, readFileSync, existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { config as loadEnv } from "dotenv";
-import { r2Client, r2Env, putObject } from "./lib/r2.mjs";
+import { r2Client, r2Env, putObject, getObject, getJson } from "./lib/r2.mjs";
+import { encodeSnapshot } from "./lib/snapshot-format.mjs";
+import {
+  makeProjection,
+  buildPointGrid,
+  buildParkGrid,
+  bakeEdgeFeatures,
+  contract,
+  toCSR,
+} from "./lib/graph-build.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 loadEnv({ path: join(here, "..", ".env") });
@@ -33,6 +42,10 @@ loadEnv({ path: join(here, "..", ".env") });
 const CONFIG = {
   // Inner-metro bbox, ~600 km^2 centered on (42.341, -71.084).
   bbox: { south: 42.231, west: -71.233, north: 42.451, east: -70.935 },
+  center: { lat: 42.341, lon: -71.084 },
+  gridCellM: 25,
+  sampleStepM: 10,
+  featureRadii: { treeM: 20, buildingM: 30 },
   overpassPrimary: "https://overpass-api.de/api/interpreter",
   overpassMirror: "https://overpass.kumi.systems/api/interpreter",
   coolingCentersUrl:
@@ -52,6 +65,9 @@ const CONFIG = {
 };
 
 const dataDir = join(here, "..", "data");
+const cacheDir = join(dataDir, ".cache"); // gitignored; raw Overpass/GIS cache
+const rawElementsPath = join(cacheDir, "raw-elements.json");
+const rawCoolingPath = join(cacheDir, "raw-cooling.json");
 const USER_AGENT = "oasyn-maps-build/0.1 (snapshot build; contact: oasyn-maps dev)";
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -316,8 +332,8 @@ async function publish(version, files, meta) {
   const client = r2Client(env);
   const prefix = `${CONFIG.snapshotPrefix}/${version}`;
   console.log(`[build-data] publishing to r2://${env.bucket}/${prefix}/`);
-  for (const [name, buf] of files) {
-    await putObject(client, env.bucket, `${prefix}/${name}`, buf, "application/json");
+  for (const [name, buf, contentType] of files) {
+    await putObject(client, env.bucket, `${prefix}/${name}`, buf, contentType ?? "application/json");
     console.log(`[build-data]   put ${name} (${(buf.length / 1024 / 1024).toFixed(2)} MB)`);
   }
   // Advance the latest pointer only after every object uploaded.
@@ -330,15 +346,144 @@ async function publish(version, files, meta) {
 // Main
 // ---------------------------------------------------------------------------
 
+/**
+ * Reprocess from the snapshot already in R2 (no Overpass). Pulls the raw
+ * graph.json + feature layers from the current latest prefix, bakes features,
+ * contracts, encodes graph.bin, and republishes a new version.
+ */
+async function reprocessFromR2({ noUpload, version, retrievedAt }) {
+  const env = r2Env();
+  const client = r2Client(env);
+  console.log(`[build-data] --from-r2: reading latest pointer`);
+  const pointer = await getJson(client, env.bucket, env.latestPointer);
+  const srcPrefix = pointer.prefix;
+  console.log(`[build-data] source prefix: ${srcPrefix}`);
+
+  const graph = JSON.parse((await getObject(client, env.bucket, `${srcPrefix}/graph.json`)).toString("utf8"));
+  const parksFC = JSON.parse((await getObject(client, env.bucket, `${srcPrefix}/parks.json`)).toString("utf8"));
+  const treesFC = JSON.parse((await getObject(client, env.bucket, `${srcPrefix}/trees.json`)).toString("utf8"));
+  const bldgFC = JSON.parse((await getObject(client, env.bucket, `${srcPrefix}/buildings.json`)).toString("utf8"));
+  console.log(`[build-data] loaded raw graph (${graph.nodes.length} nodes, ${graph.edges.length} edges) + layers from R2`);
+
+  const project = makeProjection(CONFIG.center).project;
+  const treePts = treesFC.features.map((f) => ({ lon: f.geometry.coordinates[0], lat: f.geometry.coordinates[1] }));
+  const bldgPts = bldgFC.features
+    .filter((f) => f.geometry?.coordinates?.[0]?.length >= 3)
+    .map((f) => {
+      const ring = f.geometry.coordinates[0];
+      let lat = 0, lon = 0;
+      for (const [x, y] of ring) { lon += x; lat += y; }
+      return { lat: lat / ring.length, lon: lon / ring.length };
+    });
+  const treeGrid = buildPointGrid(treePts, project, CONFIG.gridCellM);
+  const bldgGrid = buildPointGrid(bldgPts, project, CONFIG.gridCellM);
+  const parkGrid = buildParkGrid(parksFC.features, project, CONFIG.gridCellM);
+
+  console.time("[build-data] bake features");
+  bakeEdgeFeatures(graph, project, { treeGrid, parkGrid, bldgGrid }, {
+    sampleStepM: CONFIG.sampleStepM, treeM: CONFIG.featureRadii.treeM, buildingM: CONFIG.featureRadii.buildingM,
+  });
+  console.timeEnd("[build-data] bake features");
+
+  const rawNodes = graph.nodes.length;
+  const rawEdges = graph.edges.length;
+  console.time("[build-data] contract");
+  const contracted = contract(graph);
+  console.timeEnd("[build-data] contract");
+  console.log(`[build-data] contraction: ${rawNodes}->${contracted.nodes.length} nodes, ${rawEdges}->${contracted.edges.length} edges`);
+
+  const csr = toCSR(contracted, project);
+  csr.projection = { center: CONFIG.center };
+  const graphBin = encodeSnapshot(csr);
+  console.log(`[build-data] graph.bin: ${(graphBin.length / 1024 / 1024).toFixed(2)} MB`);
+
+  const connected = largestComponentFraction(contracted);
+  const meta = {
+    contractVersion: "0.1.0", version, bbox: CONFIG.bbox, center: CONFIG.center,
+    rawNodes, rawEdges, nodes: contracted.nodes.length, edges: contracted.edges.length,
+    connectedFraction: Number(connected.toFixed(4)),
+    binary: { file: "graph.bin", format: "OSNP", version: 1 },
+    reprocessedFrom: srcPrefix,
+    layers: (pointer.meta?.layers ?? []),
+  };
+
+  mkdirSync(dataDir, { recursive: true });
+  writeFileSync(join(dataDir, "graph.bin"), graphBin);
+  writeFileSync(join(dataDir, "meta.json"), Buffer.from(JSON.stringify(meta)));
+
+  if (noUpload) {
+    console.log(`[build-data] --no-upload; wrote graph.bin + meta.json locally, not publishing.`);
+    return;
+  }
+
+  // Publish the new graph.bin + meta.json under a fresh version, and copy the
+  // layer JSONs forward so the new prefix is self-contained.
+  const prefix = `${CONFIG.snapshotPrefix}/${version}`;
+  console.log(`[build-data] publishing reprocessed snapshot to r2://${env.bucket}/${prefix}/`);
+  await putObject(client, env.bucket, `${prefix}/graph.bin`, graphBin, "application/octet-stream");
+  await putObject(client, env.bucket, `${prefix}/graph.json`, Buffer.from(JSON.stringify(contracted)), "application/json");
+  await putObject(client, env.bucket, `${prefix}/meta.json`, Buffer.from(JSON.stringify(meta)), "application/json");
+  for (const name of ["parks.json", "trees.json", "water.json", "places.json", "buildings.json", "cooling.json"]) {
+    try {
+      const buf = await getObject(client, env.bucket, `${srcPrefix}/${name}`);
+      await putObject(client, env.bucket, `${prefix}/${name}`, buf, "application/json");
+    } catch (err) {
+      console.warn(`[build-data]   skip copy ${name}: ${err.message}`);
+    }
+  }
+  const ptr = Buffer.from(JSON.stringify({ version, prefix, meta }, null, 2));
+  await putObject(client, env.bucket, env.latestPointer, ptr, "application/json");
+  console.log(`[build-data] pointer -> ${env.latestPointer} (version ${version}). Done.`);
+}
+
 async function main() {
   const noUpload = process.argv.includes("--no-upload");
+  // --reprocess re-runs partition/graph/bake/contract/encode from the CACHED
+  // raw Overpass data instead of re-downloading. Use after a build-code change
+  // when the underlying OSM data hasn't changed (fast, no slow API).
+  const reprocess = process.argv.includes("--reprocess");
   mkdirSync(dataDir, { recursive: true });
+  mkdirSync(cacheDir, { recursive: true });
   const retrievedAt = new Date().toISOString();
   const version = retrievedAt.replace(/[:.]/g, "-");
 
-  const { elements, url } = await fetchAllTiles(CONFIG.bbox);
+  // --from-r2 reprocesses from the snapshot already in R2 (the raw graph.json +
+  // layer JSONs we published earlier) — no Overpass, no local cache needed.
+  // This bakes features + contracts + encodes graph.bin and republishes.
+  if (process.argv.includes("--from-r2")) {
+    await reprocessFromR2({ noUpload, version, retrievedAt });
+    return;
+  }
+
+  let elements;
+  let url;
+  let cooling;
+  if (reprocess) {
+    if (!existsSync(rawElementsPath)) {
+      throw new Error(
+        `--reprocess needs a cached raw fetch at ${rawElementsPath}; run a normal build once first.`,
+      );
+    }
+    console.log(`[build-data] --reprocess: reading cached raw from ${cacheDir}`);
+    const cached = JSON.parse(readFileSync(rawElementsPath, "utf8"));
+    elements = cached.elements;
+    url = cached.url;
+    cooling = existsSync(rawCoolingPath)
+      ? JSON.parse(readFileSync(rawCoolingPath, "utf8"))
+      : { type: "FeatureCollection", features: [] };
+    console.log(`[build-data] cached raw: ${elements.length} elements`);
+  } else {
+    const fetched = await fetchAllTiles(CONFIG.bbox);
+    elements = fetched.elements;
+    url = fetched.url;
+    cooling = await fetchCoolingCenters();
+    // Cache the raw fetch so a later --reprocess skips the slow API.
+    writeFileSync(rawElementsPath, JSON.stringify({ url, elements }));
+    writeFileSync(rawCoolingPath, JSON.stringify(cooling));
+    console.log(`[build-data] cached raw fetch to ${cacheDir}`);
+  }
+
   const { ways, parks, trees, buildings, water, places } = partition(elements);
-  const cooling = await fetchCoolingCenters();
 
   const graph = buildRawGraph(ways);
   console.log(`[build-data] raw graph: ${graph.nodes.length} nodes, ${graph.edges.length} edges`);
@@ -353,17 +498,58 @@ async function main() {
   };
 
   // Validation gate — throws (non-zero exit) before any publish on failure.
+  // Runs on the RAW graph (count thresholds target raw scale).
   const { connected } = validate(graph, layers);
+
+  // --- Task 7: bake static edge features, then degree-2 contract ------------
+  const project = makeProjection(CONFIG.center).project;
+
+  // One grid per feature type; features projected once.
+  const treePts = trees.map((t) => ({ lat: t.lat, lon: t.lon }));
+  const bldgPts = buildings
+    .filter((b) => b.geometry && b.geometry.length >= 3)
+    .map((b) => centroidLatLon(b.geometry));
+  const treeGrid = buildPointGrid(treePts, project, CONFIG.gridCellM);
+  const bldgGrid = buildPointGrid(bldgPts, project, CONFIG.gridCellM);
+  const parkGrid = buildParkGrid(layers.parks.features, project, CONFIG.gridCellM);
+
+  console.time("[build-data] bake features");
+  bakeEdgeFeatures(graph, project, { treeGrid, parkGrid, bldgGrid }, {
+    sampleStepM: CONFIG.sampleStepM,
+    treeM: CONFIG.featureRadii.treeM,
+    buildingM: CONFIG.featureRadii.buildingM,
+  });
+  console.timeEnd("[build-data] bake features");
+
+  const rawNodes = graph.nodes.length;
+  const rawEdges = graph.edges.length;
+  console.time("[build-data] contract");
+  const contracted = contract(graph);
+  console.timeEnd("[build-data] contract");
+  console.log(
+    `[build-data] contraction: ${rawNodes}->${contracted.nodes.length} nodes, ` +
+      `${rawEdges}->${contracted.edges.length} edges`,
+  );
+
+  // --- Task 7: assemble CSR and encode the binary snapshot ------------------
+  const csr = toCSR(contracted, project);
+  csr.projection = { center: CONFIG.center };
+  const graphBin = encodeSnapshot(csr);
+  console.log(`[build-data] graph.bin: ${(graphBin.length / 1024 / 1024).toFixed(2)} MB (CSR binary)`);
 
   const meta = {
     contractVersion: "0.1.0",
     version,
     bbox: CONFIG.bbox,
-    nodes: graph.nodes.length,
-    edges: graph.edges.length,
+    center: CONFIG.center,
+    rawNodes,
+    rawEdges,
+    nodes: contracted.nodes.length,
+    edges: contracted.edges.length,
     connectedFraction: Number(connected.toFixed(4)),
+    binary: { file: "graph.bin", format: "OSNP", version: 1 },
     layers: [
-      layerProv("graph", url, retrievedAt, "derived", "Raw undirected walking graph; degree-2 contraction pending (Hour 2)."),
+      layerProv("graph", url, retrievedAt, "derived", "Degree-2-contracted undirected walking graph with baked static edge features (trees/park/bldg); CSR binary in graph.bin."),
       layerProv("parks", url, retrievedAt, "real", "OSM leisure=park."),
       layerProv("trees", url, retrievedAt, "real", "OSM natural=tree."),
       layerProv("water", url, retrievedAt, "real", "OSM amenity=drinking_water."),
@@ -374,8 +560,11 @@ async function main() {
   };
 
   // Serialise once; reuse the buffers for both local write and R2 upload.
+  // graph.bin (binary CSR) is what the engine loads at startup; graph.json is
+  // kept for debugging/inspection only.
   const files = [
-    ["graph.json", Buffer.from(JSON.stringify(graph))],
+    ["graph.bin", graphBin, "application/octet-stream"],
+    ["graph.json", Buffer.from(JSON.stringify(contracted))],
     ["parks.json", Buffer.from(JSON.stringify(layers.parks))],
     ["trees.json", Buffer.from(JSON.stringify(layers.trees))],
     ["water.json", Buffer.from(JSON.stringify(layers.water))],
@@ -397,6 +586,17 @@ async function main() {
 
 function layerProv(name, url, retrievedAt, kind, notes) {
   return { name, url, retrievedAt, kind, notes };
+}
+
+/** Average of a way's geometry vertices -> {lat, lon} (building centroid proxy). */
+function centroidLatLon(geom) {
+  let lat = 0;
+  let lon = 0;
+  for (const p of geom) {
+    lat += p.lat;
+    lon += p.lon;
+  }
+  return { lat: lat / geom.length, lon: lon / geom.length };
 }
 
 main().catch((err) => {

@@ -80,7 +80,7 @@ backend/
   scripts/
     build-data.mjs            # Overpass + GIS snapshot build, feature baking, contraction
     plan-cli.mjs              # headless scenario runner (tsx)
-  data/                       # committed snapshot outputs + meta.json
+  data/                       # local snapshot outputs + meta.json (gitignored; published to R2, not committed)
   test/                       # vitest specs mirroring core/ + contract validation
 ```
 
@@ -88,14 +88,17 @@ backend/
 
 ### 3.1 Build (`scripts/build-data.mjs`)
 
-Node ESM script, run manually, commits outputs. Steps:
+Node ESM script, run manually, publishes outputs to Cloudflare R2 (not git). The bbox is the Greater Boston **inner metro** (~600 km², ~24.5 km × 24.5 km centered on 42.341, -71.084), covering Boston, Cambridge, Somerville, Brookline, Chelsea, Everett, and the inner ring. A single Overpass call for 600 km² times out, so the fetch is **tiled**. Steps:
 
-1. Fetch Overpass layers for the bbox (`config.bbox`): walking ways, parks, trees, buildings (centers), drinking water, named places. Primary endpoint then mirror on failure.
+1. Split `config.bbox` into a `tiles × tiles` grid; fetch each tile from Overpass separately (primary then mirror on failure, with retry + backoff per tile), and merge results deduping OSM elements by `type/id` across tile seams.
 2. Fetch cooling centers from the Boston GIS FeatureServer query URL in config.
 3. Build the raw undirected graph from ways; dedupe nodes by rounded coordinate.
-4. Bake per-edge features with a 25 m grid hash, sampling each edge every `sampleStepM`: `trees` (count within 20 m), `park` (fraction of samples in/near a park), `bldg` (building centroids within 30 m). Also a `step` flag from `highway=steps` and `wheelchair=no`.
-5. Degree-2 contraction: collapse chains through degree-2 nodes into one edge with summed length, length-weighted-averaged features, concatenated geometry. Log counts before/after.
-6. Write `graph.json`, `parks.json`, `trees.json` (full for features, grid-thinned for art), `water.json`, `cooling.json`, `places.json`, and `meta.json` (provenance per layer).
+4. Bake per-edge features with a 25 m grid hash, sampling each edge every `sampleStepM`: `trees` (count within 20 m), `park` (fraction of samples in/near a park), `bldg` (building centroids within 30 m). Also a `step` flag from `highway=steps` and `wheelchair=no`. (Hour 2.)
+5. Degree-2 contraction: collapse chains through degree-2 nodes into one edge with summed length, length-weighted-averaged features, concatenated geometry. Log counts before/after. (Hour 2.)
+6. **Validation gate**: node/edge minimums, non-empty layers, and largest-connected-component fraction must pass, else the build fails loudly and publishes nothing (guards against Overpass silent-partial-success).
+7. Write `graph.json`, `parks.json`, `trees.json`, `water.json`, `cooling.json`, `places.json`, `buildings.json`, and `meta.json` (provenance per layer) locally, then upload to R2 under a versioned key `snapshots/<area>/<version>/` and advance the `latest.json` pointer only after every object is uploaded.
+
+Observed inner-metro raw build: ~806k nodes / ~909k edges, ~99% connected; `graph.json` ~170 MB and `buildings.json` ~96 MB — the reason the snapshot is published to R2 rather than committed.
 
 `GraphFile` shape (from the plan):
 
@@ -241,6 +244,14 @@ Each route: validate request → call core → serialise → validate response (
 - Stateless: no persistence between requests; logging never includes coordinates or identifiers.
 - Outbound weather is owned by the backend (decided, R3.8): when a scenario requests live weather, the server calls Open-Meteo with coordinates rounded to 2 decimals and no UUID, and falls back to the Heatwave preset with a notice descriptor on failure. The frontend never calls Open-Meteo directly.
 
+### 8.4 Snapshot storage and startup load (decided)
+
+- The snapshot is published to **Cloudflare R2** (S3-compatible) by the build script, not committed to git (R2.6). Keyed `snapshots/<area>/<version>/` with a `latest.json` pointer advanced only after a passing validation gate.
+- R2 credentials come from the environment (`.env`, gitignored; `.env.example` committed). They are never hardcoded and never committed. The real backend reads them at startup to fetch the snapshot; the stub server (below) needs none.
+- **Startup load (`snapshot.ts`, Hour 2):** read the `latest` pointer, download the snapshot from R2, load into CSR typed arrays, fail fast if the fetch or load fails. At inner-metro scale (~266 MB JSON) a binary snapshot format is the planned optimisation so startup parse stays fast.
+- **Stub test deploy (Render):** `server.ts` runs standalone returning validated fixtures with `X-Oasyn-Stub: true`. It touches no storage, needs no R2 credentials, adds permissive CORS and a `/healthz` check, and exists to give the frontend live sample data during Hour 1. See `backend/API_SAMPLE.md` and `backend/render.yaml`.
+- **Deployment:** backend and frontend are independent, separately deployable packages. The backend is self-contained (`backend/` has its own `package.json` + lockfile); there is no monorepo root `package.json` / workspace.
+
 ## 9. Determinism and seeded randomness (cross-cutting)
 
 - `rng.ts` is mulberry32 seeded from `config.seed`; used for seeded hotspot generation and tree-glyph jitter in the build script, never in request handling.
@@ -268,8 +279,8 @@ Vitest, mirroring `core/`. Deterministic throughout; escalation uses a fake cloc
 
 ## 12. Technology choices
 
-- TypeScript, Node ESM. HTTP via a thin framework (express or fastify) — chosen at scaffold time; routes stay framework-light so core is unaffected.
-- `zod` for schemas, `suncalc` for sun position, `vitest` for tests, `tsx` for the headless CLI.
+- TypeScript, Node ESM. HTTP via **express** (chosen at scaffold time); routes stay framework-light so core is unaffected.
+- `zod` for schemas, `suncalc` for sun position, `vitest` for tests, `tsx` for the entrypoint and headless CLI. `@aws-sdk/client-s3` + `dotenv` for the R2 snapshot pipeline; `cors` for the test deploy.
 - Typed arrays + CSR + contraction for the hot loop (no objects per node/edge).
 
 ## 13. Error handling and resilience
@@ -280,9 +291,18 @@ Vitest, mirroring `core/`. Deterministic throughout; escalation uses a fake cloc
 - Live weather failure (if the backend fetches it) → fall back to the Heatwave preset and set a descriptor so the frontend can disclose it.
 - Stub endpoints set `X-Oasyn-Stub: true` until the real engine backs them.
 
-## 14. Open decisions (to confirm at scaffold)
+## 14. Open decisions
 
-1. HTTP framework: express vs fastify. Both satisfy the design; fastify gives slightly better throughput and built-in schema hooks.
-2. Exact `B` (bucket count) for the stretch state-dependent search (`math.md` 5.4) — out of MVP scope, left as a stretch module.
+Open:
 
-Resolved: live weather is fetched by the backend (R3.8, R14.3), with coordinates rounded to 2 decimals and no UUID.
+1. Exact `B` (bucket count) for the stretch state-dependent search (`math.md` 5.4) — out of MVP scope, left as a stretch module.
+2. Snapshot on-disk format: JSON today; move to a compact **binary** CSR dump before the inner-metro snapshot loads at startup, so parse stays fast (~266 MB JSON is slow to parse on boot).
+
+Resolved:
+
+- **HTTP framework: express** (section 12). Routes stay framework-light so core is unaffected.
+- **Live weather is fetched by the backend** (R3.8, R14.3), with coordinates rounded to 2 decimals and no UUID.
+- **Area / bbox: Greater Boston inner metro, ~600 km²** (section 3.1), not the Back Bay / Northeastern starter box.
+- **Snapshot storage: Cloudflare R2** (S3-compatible), published by the build script under a versioned key with a `latest` pointer, fetched at startup — not committed to git (R2.6, section 8.4). Chosen over S3 for free egress; the AWS-hosted backend reads it over the internet once per boot (off the request hot path). Credentials from env only.
+- **Build resilience: tiled Overpass fetch + retry + a hard validation gate** (section 3.1) so a flaky or partial Overpass response never produces a published snapshot.
+- **Deployment: backend and frontend are independent packages** with no monorepo root `package.json`. A stub of the backend (fixtures only, no storage/credentials) deploys to Render for frontend sample-data sharing (section 8.4).

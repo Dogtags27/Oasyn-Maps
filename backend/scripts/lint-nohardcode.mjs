@@ -33,12 +33,24 @@ function walk(dir) {
   return out;
 }
 
+/**
+ * Strip // line comments and block comments so a comment that merely *mentions*
+ * a banned token (e.g. "no Math.random here") doesn't trip the guard. Naive but
+ * sufficient: string literals containing comment markers are rare in core/ and
+ * are not the thing we gate on.
+ */
+function stripComments(src) {
+  return src
+    .replace(/\/\*[\s\S]*?\*\//g, "") // block comments
+    .replace(/(^|[^:])\/\/[^\n]*/g, "$1"); // line comments (avoid matching "://")
+}
+
 const violations = [];
 for (const file of walk(coreDir)) {
-  const text = readFileSync(file, "utf8");
-  if (/\bMath\.random\b/.test(text)) violations.push(`${file}: uses Math.random`);
-  if (/\bDate\.now\b|new Date\(/.test(text)) violations.push(`${file}: uses Date`);
-  if (/#[0-9a-fA-F]{3,6}\b/.test(text)) violations.push(`${file}: stray hex literal`);
+  const code = stripComments(readFileSync(file, "utf8"));
+  if (/\bMath\.random\b/.test(code)) violations.push(`${file}: uses Math.random`);
+  if (/\bDate\.now\b|new Date\(/.test(code)) violations.push(`${file}: uses Date`);
+  if (/#[0-9a-fA-F]{3,6}\b/.test(code)) violations.push(`${file}: stray hex literal`);
 }
 
 if (violations.length) {
