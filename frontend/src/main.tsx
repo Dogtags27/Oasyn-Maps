@@ -26,3 +26,13 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
     </ClientProvider>
   </React.StrictMode>,
 );
+
+// Register the app-shell service worker so the app opens offline (R17.3).
+// Routing still needs a connection; API calls are never cached.
+if ("serviceWorker" in navigator && import.meta.env.PROD) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("/sw.js").catch(() => {
+      // PWA is a stretch feature; failure to register is non-fatal.
+    });
+  });
+}

@@ -26,6 +26,7 @@ import { TripControls } from "@/ui/TripControls";
 import { RouteCard } from "@/ui/RouteCard";
 import { SunModeSuggest } from "@/ui/SunModeSuggest";
 import { BackendNotice } from "@/ui/BackendNotice";
+import { ResilienceNotice } from "@/ui/ResilienceNotice";
 import { OfferCard } from "@/safety/OfferCard";
 import { SafetyFlow } from "@/safety/SafetyFlow";
 import { useStore } from "@/store";
@@ -66,6 +67,7 @@ export function Navigator() {
     <>
       <TopBar />
       <BackendNotice />
+      <ResilienceNotice />
       <SunModeSuggest />
       <main id="main" className="navigator">
         <h1 className="visually-hidden">{t("nav.map")}</h1>

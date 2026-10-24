@@ -220,6 +220,10 @@
   "landing.whoFor.body": "暑い都市を歩く人々：通勤者、介護者、屋外作業者、来訪者。",
   "landing.kiro.title": "Kiro で構築",
   "landing.kiro.body": "仕様、ステアリング、フック、CLI がこの構築を導きました。",
+  "landing.kiro.spec": "仕様：要件、設計、タスクが各時間の作業を導きました。",
+  "landing.kiro.steering": "ステアリング：UI、国際化、安全のための常時適用ルール。",
+  "landing.kiro.hooks": "フック：保存時にコンテンツと国際化のチェックを実行。",
+  "landing.kiro.cli": "CLI：ビルド、テスト、チェックを一つのコマンドで実行。",
   "landing.footer.privacy": "プライバシー",
   "landing.footer.about": "概要",
 

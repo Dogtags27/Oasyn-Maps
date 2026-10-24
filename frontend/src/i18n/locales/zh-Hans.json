@@ -220,6 +220,10 @@
   "landing.whoFor.body": "在炎热城市步行的人群：通勤者、照护者、户外工作者和访客。",
   "landing.kiro.title": "使用 Kiro 构建",
   "landing.kiro.body": "规格、引导、钩子和 CLI 指导了本次构建。",
+  "landing.kiro.spec": "规格：需求、设计和任务指导了每个小时的工作。",
+  "landing.kiro.steering": "引导：面向界面、国际化和安全的常驻规则。",
+  "landing.kiro.hooks": "钩子：保存时运行内容和国际化检查。",
+  "landing.kiro.cli": "CLI：构建、测试和检查通过一个命令运行。",
   "landing.footer.privacy": "隐私",
   "landing.footer.about": "关于",
 
