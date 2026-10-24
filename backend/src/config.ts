@@ -127,6 +127,18 @@ export const gamma = 1.0;
 export const m = 0.3;
 
 // ---------------------------------------------------------------------------
+// Turns (R6.7)
+// ---------------------------------------------------------------------------
+
+/** Turn instruction thresholds, degrees of bearing change. */
+export const turns = {
+  /** below this absolute change at a junction = "straight". */
+  straightDeg: 25,
+  /** straightDeg..sharpDeg = "slight"; at/above sharpDeg = full left/right. */
+  sharpDeg: 60,
+} as const;
+
+// ---------------------------------------------------------------------------
 // Frontier / dedupe (R6)
 // ---------------------------------------------------------------------------
 

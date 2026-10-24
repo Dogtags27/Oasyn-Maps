@@ -49,7 +49,11 @@ const violations = [];
 for (const file of walk(coreDir)) {
   const code = stripComments(readFileSync(file, "utf8"));
   if (/\bMath\.random\b/.test(code)) violations.push(`${file}: uses Math.random`);
-  if (/\bDate\.now\b|new Date\(/.test(code)) violations.push(`${file}: uses Date`);
+  // Ban WALL-CLOCK reads only: Date.now() and the no-arg `new Date()`. Converting
+  // an input timestamp via `new Date(timeMs)` is deterministic and allowed
+  // (e.g. feeding suncalc), so it does not trip the guard.
+  if (/\bDate\.now\s*\(/.test(code)) violations.push(`${file}: uses Date.now()`);
+  if (/new Date\s*\(\s*\)/.test(code)) violations.push(`${file}: uses new Date() (wall clock)`);
   if (/#[0-9a-fA-F]{3,6}\b/.test(code)) violations.push(`${file}: stray hex literal`);
 }
 

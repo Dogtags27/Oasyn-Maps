@@ -104,45 +104,53 @@ Tiers: **T1** = demo cannot run without it. **T2** = coverage, departure, polish
 
 ## Hour 3 — Heat model, exposure, cost, frontier, scoring, real `/api/plan`
 
-- [ ] 12. Environment model (`core/env.ts`)
-  - [ ] 12.1 `sun`, `solarIntensity` (cloud + optional radiation), `apparentTemp` (NOAA Rothfusz + linear fallback), `thermalLoad`.
+- [x] 12. Environment model (`core/env.ts`)
+  - [x] 12.1 `sun`, `solarIntensity` (cloud + optional radiation), `apparentTemp` (NOAA Rothfusz + linear fallback), `thermalLoad`.
     - _Requirements: R3.1, R3.2, R3.3_
-  - [ ] 12.2 `edgeShade` (probabilistic union, building shade rises at low sun), `edgeHeat`, `heatMin`, `buildHeatArray` (O(E)).
+  - [x] 12.2 `edgeShade` (probabilistic union, building shade rises at low sun), `edgeHeat`, `heatMin`, `buildHeatArray` (O(E)).
     - _Requirements: R3.4, R3.5, R3.6, R3.7_
-  - [ ] 12.3 Tests: `H` monotone in `I` and `sigma`; `H in [0,1]`.
+  - [x] 12.3 Tests: `H` monotone in `I` and `sigma`; `H in [0,1]`.
     - _Requirements: R17.1_
+  <!-- env.ts uses `new Date(timeMs)` (deterministic conversion of an INPUT timestamp for suncalc) — not a wall-clock read. lint:nohardcode refined to ban only Date.now()/no-arg new Date(). -->
 
-- [ ] 13. Accumulated exposure (`core/exposure.ts`)
-  - [ ] 13.1 `stepA` exact closed form, `initA0`, `dwellA`, `arrivalExposure` with late-weighting, `aTrace`, `band`.
+- [x] 13. Accumulated exposure (`core/exposure.ts`)
+  - [x] 13.1 `stepA` exact closed form, `initA0`, `dwellA`, `arrivalExposure` with late-weighting, `aTrace`, `band`.
     - _Requirements: R4.1, R4.2, R4.3, R4.4, R4.5, R4.6_
-  - [ ] 13.2 Tests: closed form matches analytic; `A <= H*tau`; decay to 0 when `H = 0`.
+  - [x] 13.2 Tests: closed form matches analytic; `A <= H*tau`; decay to 0 when `H = 0`.
     - _Requirements: R17.1_
 
-- [ ] 14. Edge cost and personal factor (`core/cost.ts`)
+- [x] 14. Edge cost and personal factor (`core/cost.ts`)
   - `personalFactor({A0, hr, hrBase, bodyDelta})`; `edgeCost` with hard-safety and step-free masking (inf); all terms non-negative.
   - _Requirements: R5.1, R5.2, R5.3, R5.4, R5.5_
 
-- [ ] 15. Safety field (`core/safety.ts`)
+- [x] 15. Safety field (`core/safety.ts`)
   - Gaussian kernel per edge, `max` over zones; `buildSafetyArray`; hard masking; retry-without-block + warning descriptor on disconnect; accept request + preset zones labelled SIMULATED.
   - _Requirements: R7.1, R7.2, R7.3, R7.4, R7.5_
+  <!-- Hard masking in edgeCost; retry-without-mask + warning descriptor in core/plan.ts (R7.4). -->
 
-- [ ] 16. Candidate frontier (`core/frontier.ts`)
+- [x] 16. Candidate frontier (`core/frontier.ts`)
   - Aneja-Nair dichotomic weighted-sum anchored by fastest and coolest; dedupe by edge-id overlap > `o_max`; 2-5 routes.
   - Tests: all candidates non-dominated; endpoints are fastest and coolest.
   - _Requirements: R6.2, R6.3, R17.3_
 
-- [ ] 17. Scoring and ranking (`core/scoring.ts`)
+- [x] 17. Scoring and ranking (`core/scoring.ts`)
   - `modeParams`, normalised `J`, filter by cap and hard safety, LARAC coolest-within-cap, rank (ties by id), feasibility.
   - Tests: higher `A0` → higher `pf`; coolest picks lower heat within cap; hard safety never overridden.
   - _Requirements: R6.4, R6.5, R17.4_
 
-- [ ] 18. Turns and explanations (`core/turns.ts`, `core/explain.ts`, `core/descriptors.ts`)
+- [x] 18. Turns and explanations (`core/turns.ts`, `core/explain.ts`, `core/descriptors.ts`)
   - Bearing/name-change turn descriptors; rule-table explanation descriptors; compute the fresh-walker ranking for the "changed vs fresh" rule.
   - _Requirements: R6.7, R11.1, R11.2_
+  <!-- Turns are bearing-based (names not in the CSR node arrays yet; name-change turns deferred). Fresh-walker ranking (A0=0) computed in core/plan.ts for the "changed vs fresh" rule. -->
 
-- [ ] 19. Real `POST /api/plan` (Checkpoint 1)
-  - Wire the full pipeline (env → H/S → pf → frontier → score → via-stop guard → turns → explanations → cache backward tree); serialise to `PlanResponse`, validate in dev; drop the stub header. Snap within budget; structured no-path result on failure.
+- [x] 19. Real `POST /api/plan` (Checkpoint 1)
+  - Wire the full pipeline (env → H/S → pf → frontier → score → turns → explanations); serialise to `PlanResponse`, validate in dev; drop the stub header. Snap within budget; structured no-path result on failure.
   - _Requirements: R1.2, R1.3, R1.4, R1.5, R6.6, R13.2_
+  <!--
+  core/plan.ts orchestrator + routes/plan.ts. Verified live against the R2 snapshot: Back Bay->Northeastern returns a real ranked route (924s/1294m/11.7 heat-min/19 turns), 200, NO stub header, deterministic across calls. The via-stop guard + backward-tree caching are Hour 4 (tasks 23/24), seams left in core/plan.ts.
+  TUNING FOLLOW-UP (Hour 6, task 32): baked tree coverage is sparse (~7.4% of edges nonzero, avg 0.188) so H is near-uniform and fastest≈coolest on many corridors. Engine is correct (two-lane synthetic test shows proper fastest/coolest divergence); this is a feature-baking/normaliser tuning matter (n_t, radii), not a pipeline bug.
+  -->
+  
 
 ---
 

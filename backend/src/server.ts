@@ -26,6 +26,7 @@ import { apiError, sendError, stub, zodToApiError } from "./routes/error.js";
 import { getMeta } from "./routes/meta.js";
 import { getConfig } from "./routes/config.js";
 import { makeLayersRoute } from "./routes/layers.js";
+import { makePlanRoute } from "./routes/plan.js";
 import type { Snapshot } from "./snapshot.js";
 
 /**
@@ -118,7 +119,12 @@ export function createServer(snapshot?: Snapshot) {
     });
   };
 
-  post("/api/plan", PlanRequest, "plan");
+  if (snapshot) {
+    // Real plan pipeline (Checkpoint 1) — no stub header.
+    app.post("/api/plan", makePlanRoute(snapshot));
+  } else {
+    post("/api/plan", PlanRequest, "plan");
+  }
   post("/api/replan", ReplanRequest, "replan");
   post("/api/body", BodyRequest, "body");
   post("/api/escalation/step", EscalationRequest, "escalation");
