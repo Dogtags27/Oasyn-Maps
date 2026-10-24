@@ -1,7 +1,7 @@
 /**
  * map/EndpointsLayer.tsx — start and destination glyphs (R4.4).
  *
- * Draws the start ring and destination pennant from the store's start/goal. Kept
+ * Draws the pulsing start dot and destination pin from the store's start/goal. Kept
  * separate from RouteLayer so endpoints persist even before a plan returns.
  */
 import { useEffect } from "react";
@@ -25,7 +25,7 @@ export function EndpointsLayer() {
       L.marker([start.lat, start.lng], {
         icon: L.divIcon({
           html: startGlyph(),
-          className: "oasyn-glyph",
+          className: "oasyn-glyph oasyn-glyph--start",
           iconSize: [28, 28],
           iconAnchor: [14, 14],
         }),
@@ -36,9 +36,9 @@ export function EndpointsLayer() {
       L.marker([goal.lat, goal.lng], {
         icon: L.divIcon({
           html: destinationGlyph(),
-          className: "oasyn-glyph",
-          iconSize: [28, 28],
-          iconAnchor: [4, 25],
+          className: "oasyn-glyph oasyn-glyph--goal",
+          iconSize: [32, 40],
+          iconAnchor: [16, 37],
         }),
         title: t("trip.destination"),
       }).addTo(group);

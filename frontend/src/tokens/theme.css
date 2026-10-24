@@ -2,34 +2,103 @@
  * tokens/theme.css — the @theme palette (R3.1).
  *
  * Every colour the app uses is a token here. No colour literal is allowed
- * outside this file (enforced by lint:nohardcode no-hex). "Olmsted field guide":
- * warm paper, near-black ink, flat spot colours. Encode by lightness, not hue;
- * colour is never the sole signal.
+ * outside this file (enforced by lint:nohardcode no-hex).
  *
- * Sun mode (R6.2) and prefers-contrast: more swap background/ink, bump strokes,
- * and promote secondary text via the [data-sun] / media overrides below.
+ * Visual language: a bright, Google-Maps-inspired mobile palette. Clean white
+ * surfaces on a cool canvas, a vivid primary blue, and saturated spot colours
+ * for the heat ramp (cool green -> amber -> hot red). Gradients and soft
+ * elevation shadows live here too, so components never name a colour.
+ * Colour is never the sole signal: the ramp is always paired with text/pattern.
+ *
+ * Sun mode (R6.2) and prefers-contrast: more swap to pure white/black, bump
+ * strokes, flatten gradients, and promote secondary text.
  */
-
 :root {
   /* surfaces and ink */
-  --paper: #f4ecd8;
-  --surface: #efe4cb;
-  --ink: #1c1a17;
-  --ink-2: #5c564c;
+  --canvas: #f3f6fc;
+  --paper: #ffffff;
+  --surface: #eef3fd;
+  --surface-2: #f8f9fb;
+  --line: #e3e7ef;
+  --ink: #1f2430;
+  --ink-2: #5f6673;
+  --on-color: #ffffff;
+
+  /* brand */
+  --primary: #1a73e8;
+  --primary-strong: #0b57d0;
+  --primary-soft: #e8f0fe;
+  --violet: #7c4dff;
+  --pink: #ff4f8b;
+  --teal: #00b8a9;
 
   /* spot colours (the heat ramp and accents) */
-  --necklace: #2f7a52; /* low / cool */
-  --amber: #c8841a; /* elevated / caution */
-  --brick: #a8371f; /* high / critical */
-  --charles: #2f6f9e; /* water / info */
-  --plum: #6b3f6e; /* simulated */
-  --sun: #d8a600; /* sun badge */
+  --necklace: #10b26c; /* low / cool */
+  --necklace-soft: #e3f8ee;
+  --amber: #f59e0b; /* elevated / caution */
+  --amber-soft: #fff4dc;
+  --brick: #ea4335; /* high / critical */
+  --brick-soft: #fde8e6;
+  --charles: #1e9bf0; /* water / info */
+  --charles-soft: #e2f3ff;
+  --plum: #8b5cf6; /* simulated */
+  --plum-soft: #efe8ff;
+  --sun: #fbbc04; /* sun badge */
 
-  /* derived */
+  /* gradients */
+  --grad-primary: linear-gradient(135deg, #1a73e8 0%, #7c4dff 100%);
+  --grad-cool: linear-gradient(135deg, #00c9a7 0%, #1a73e8 100%);
+  --grad-fresh: linear-gradient(135deg, #34d399 0%, #10b26c 100%);
+  --grad-warm: linear-gradient(135deg, #fbbc04 0%, #ff7a1a 100%);
+  --grad-hot: linear-gradient(135deg, #ff7a1a 0%, #ea4335 100%);
+  --grad-violet: linear-gradient(135deg, #a78bfa 0%, #7c4dff 100%);
+  --grad-pink: linear-gradient(135deg, #ff8a65 0%, #ff4f8b 100%);
+  --grad-water: linear-gradient(135deg, #5ee7ff 0%, #1e9bf0 100%);
+  --grad-ramp: linear-gradient(90deg, #10b26c 0%, #f59e0b 50%, #ea4335 100%);
+  --grad-hero: radial-gradient(60% 60% at 15% 10%, rgba(26, 115, 232, 0.28) 0%, transparent 70%),
+    radial-gradient(50% 50% at 90% 0%, rgba(255, 79, 139, 0.22) 0%, transparent 70%),
+    radial-gradient(60% 60% at 80% 90%, rgba(0, 201, 167, 0.22) 0%, transparent 70%),
+    radial-gradient(50% 50% at 10% 90%, rgba(251, 188, 4, 0.2) 0%, transparent 70%);
+  --grad-glass: linear-gradient(180deg, rgba(255, 255, 255, 0.92) 0%, rgba(255, 255, 255, 0.82) 100%);
+
+  /* elevation */
+  --shadow-1: 0 1px 2px rgba(31, 36, 48, 0.12), 0 1px 3px 1px rgba(31, 36, 48, 0.06);
+  --shadow-2: 0 2px 6px rgba(31, 36, 48, 0.1), 0 6px 16px rgba(31, 36, 48, 0.08);
+  --shadow-3: 0 10px 30px rgba(31, 36, 48, 0.16), 0 4px 10px rgba(31, 36, 48, 0.08);
+  --shadow-up: 0 -6px 24px rgba(31, 36, 48, 0.14);
+  --glow-primary: 0 6px 18px rgba(26, 115, 232, 0.38);
+  --glow-cool: 0 6px 18px rgba(0, 184, 169, 0.35);
+  --glow-hot: 0 6px 18px rgba(234, 67, 53, 0.35);
+  --ring-primary: 0 0 0 3px rgba(26, 115, 232, 0.28);
+  --scrim: rgba(17, 20, 28, 0.45);
+  --halo-primary: rgba(26, 115, 232, 0.25);
+  --halo-brick: rgba(234, 67, 53, 0.3);
+
+  /* map */
+  --route-casing: #ffffff;
+  --route-shadow: rgba(17, 20, 28, 0.28);
+  --route-alt: #8ab4f8;
+
+  /* shape */
   --stroke-w: 1.5px;
-  --radius: 10px;
+  --radius-sm: 10px;
+  --radius: 16px;
+  --radius-lg: 24px;
+  --radius-xl: 28px;
+  --radius-pill: 999px;
   --shadow-offset: 3px;
-  --tile-opacity: 0.7;
+  --tile-opacity: 1;
+
+  /* motion */
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --dur-1: 140ms;
+  --dur-2: 240ms;
+  --dur-3: 420ms;
+
+  /* layout */
+  --topbar-h: 60px;
+  --tabbar-h: 68px;
 
   /* the exposure ramp, read redundantly with pattern + text */
   --ramp-low: var(--necklace);
@@ -37,12 +106,26 @@
   --ramp-high: var(--brick);
 }
 
-/* Sun mode: pure white/black, +2px strokes, 50% tiles, promote secondary text. */
+/* Sun mode: pure white/black, +2px strokes, 50% tiles, flat high-contrast fills. */
 :root[data-sun="on"] {
+  --canvas: #ffffff;
   --paper: #ffffff;
   --surface: #ffffff;
+  --surface-2: #ffffff;
+  --line: #000000;
   --ink: #000000;
   --ink-2: #000000;
+  --primary: #000000;
+  --primary-strong: #000000;
+  --primary-soft: #ffffff;
+  --grad-primary: linear-gradient(135deg, #000000 0%, #000000 100%);
+  --grad-cool: linear-gradient(135deg, #000000 0%, #000000 100%);
+  --grad-hero: none;
+  --grad-glass: linear-gradient(180deg, #ffffff 0%, #ffffff 100%);
+  --shadow-1: 0 0 0 2px #000000;
+  --shadow-2: 0 0 0 2px #000000;
+  --shadow-3: 0 0 0 3px #000000;
+  --glow-primary: none;
   --stroke-w: 3.5px;
   --tile-opacity: 0.5;
 }
@@ -51,6 +134,7 @@
 @media (prefers-contrast: more) {
   :root {
     --ink-2: #000000;
+    --line: #000000;
     --stroke-w: 3.5px;
   }
 }
@@ -59,11 +143,16 @@
 html,
 body {
   margin: 0;
-  background: var(--paper);
+  background: var(--canvas);
   color: var(--ink);
 }
 
 *:focus-visible {
-  outline: 3px solid var(--ink);
+  outline: 3px solid var(--primary);
   outline-offset: 2px;
+}
+
+::selection {
+  background: var(--primary-soft);
+  color: var(--ink);
 }

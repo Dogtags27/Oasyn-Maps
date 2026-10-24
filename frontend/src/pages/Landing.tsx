@@ -8,6 +8,7 @@
 import { Link } from "react-router-dom";
 import { useT } from "@/i18n/useLocale";
 import { LanguageSwitcher } from "@/ui/LanguageSwitcher";
+import { BrandMark } from "@/ui/BrandMark";
 import { Hero } from "@/landing/sections/Hero";
 import { Features } from "@/landing/sections/Features";
 import { HowItWorks } from "@/landing/sections/HowItWorks";
@@ -20,7 +21,10 @@ export function Landing() {
   return (
     <>
       <header className="landing-top">
-        <span className="landing-top__brand">{t("app.name")}</span>
+        <Link to="/" className="landing-top__brand topbar__brand">
+          <BrandMark size={32} />
+          <span className="landing-top__brand-text">{t("app.name")}</span>
+        </Link>
         <nav className="landing-top__nav" aria-label={t("app.name")}>
           <Link to="/app">{t("nav.map")}</Link>
           <Link to="/lab">{t("nav.lab")}</Link>

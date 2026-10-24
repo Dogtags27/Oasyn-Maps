@@ -22,13 +22,12 @@ export function SafetyLayer() {
     if (!map) return;
     const group = L.layerGroup().addTo(map);
     const plum = resolveVar("var(--plum)");
-    const ink = resolveVar("var(--ink)");
 
     for (const z of zones) {
       L.circle([z.center.lat, z.center.lng], {
         radius: z.r,
-        color: ink,
-        weight: 1.5,
+        color: plum,
+        weight: 2,
         dashArray: "4 6",
         fillColor: plum,
         fillOpacity: 0.1 + 0.2 * z.q,

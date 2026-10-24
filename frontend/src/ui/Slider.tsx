@@ -19,8 +19,10 @@ export interface SliderProps {
 }
 
 export function Slider({ label, value, min, max, step, valueText, onChange }: SliderProps) {
+  // Filled portion of the gradient track, as a CSS custom property.
+  const fill = max > min ? ((value - min) / (max - min)) * 100 : 0;
   return (
-    <label className="slider">
+    <label className="slider" style={{ ["--fill" as string]: `${fill}%` }}>
       <span className="slider__label">
         {label}
         <span className="slider__value mono">{valueText}</span>

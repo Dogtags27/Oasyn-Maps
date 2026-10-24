@@ -10,6 +10,7 @@ import { useT } from "@/i18n/useLocale";
 import { useStore } from "@/store";
 import { SegmentedControl } from "./SegmentedControl";
 import { Button } from "./Button";
+import { Icon } from "./Icon";
 import { usePlan } from "@/api/usePlan";
 import type { ModeT } from "@/api/types";
 import type { PriorPreset } from "@/store";
@@ -40,7 +41,10 @@ export function TripControls() {
   return (
     <div className="trip-controls">
       <div className="trip-controls__group">
-        <span className="trip-controls__label">{t("mode.label")}</span>
+        <span className="trip-controls__label">
+          <Icon name="route" size={16} />
+          {t("mode.label")}
+        </span>
         <SegmentedControl
           ariaLabel={t("mode.label")}
           options={modeOptions}
@@ -53,7 +57,10 @@ export function TripControls() {
       </div>
 
       <div className="trip-controls__group">
-        <span className="trip-controls__label">{t("trip.priorExposure")}</span>
+        <span className="trip-controls__label">
+          <Icon name="heat" size={16} />
+          {t("trip.priorExposure")}
+        </span>
         <SegmentedControl
           ariaLabel={t("trip.priorExposure")}
           options={priorOptions}
@@ -65,7 +72,13 @@ export function TripControls() {
         />
       </div>
 
-      <Button variant="primary" disabled={!canPlan} onClick={() => void plan()}>
+      <Button
+        variant="primary"
+        className="trip-controls__plan"
+        disabled={!canPlan}
+        onClick={() => void plan()}
+      >
+        <Icon name="search" size={18} />
         {t("trip.plan")}
       </Button>
     </div>

@@ -1,21 +1,21 @@
 /*
  * tokens/type.css — type system (R3.4, R12.6).
  *
- * Fraunces (display), Atkinson Hyperlegible Next (body/UI), Atkinson
- * Hyperlegible Mono (numbers/labels), with system-ui fallback. CJK stacks via
+ * A native, app-like sans stack (SF Pro on iOS/macOS, Roboto on Android,
+ * Segoe UI on Windows) so the app reads like a mobile map app and loads no
+ * third-party font files (nothing extra is sent off device, R14). Atkinson
+ * Hyperlegible is preferred when installed for legibility. CJK stacks via
  * :lang(); CJK disables uppercase/letter-spacing and uses line-height 1.6.
  * Tabular figures on changing numbers.
- *
- * Font files are loaded from public/fonts when present; the system-ui fallback
- * keeps the app legible before/without them.
  */
-
 :root {
-  --font-display: "Fraunces", Georgia, "Times New Roman", serif;
-  --font-body: "Atkinson Hyperlegible Next", system-ui, -apple-system, sans-serif;
-  --font-mono: "Atkinson Hyperlegible Mono", ui-monospace, "SFMono-Regular", monospace;
-
-  --fs-body: 17px;
+  --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, system-ui, sans-serif;
+  --font-body: "Atkinson Hyperlegible Next", -apple-system, BlinkMacSystemFont, "SF Pro Text",
+    "Segoe UI", Roboto, "Helvetica Neue", Arial, system-ui, sans-serif;
+  --font-mono: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, system-ui,
+    sans-serif;
+  --fs-body: 16px;
   --fs-num: 30px;
   --lh-body: 1.5;
 }
@@ -25,14 +25,17 @@ body {
   font-size: var(--fs-body);
   line-height: var(--lh-body);
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 h1,
 h2,
 h3 {
   font-family: var(--font-display);
-  font-weight: 600;
-  line-height: 1.15;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.015em;
 }
 
 .mono,
@@ -43,27 +46,26 @@ h3 {
 
 /* CJK: serif/sans Noto stacks, no uppercase/letter-spacing, line-height 1.6. */
 :lang(zh-Hans) {
-  font-family: "Noto Sans SC", var(--font-body);
+  font-family: "Noto Sans SC", "PingFang SC", var(--font-body);
   line-height: 1.6;
   text-transform: none;
   letter-spacing: normal;
 }
-
 :lang(ja) {
-  font-family: "Noto Sans JP", var(--font-body);
+  font-family: "Noto Sans JP", "Hiragino Sans", var(--font-body);
   line-height: 1.6;
   text-transform: none;
   letter-spacing: normal;
 }
-
 :lang(zh-Hans) h1,
 :lang(zh-Hans) h2,
 :lang(zh-Hans) h3 {
-  font-family: "Noto Serif SC", var(--font-display);
+  font-family: "Noto Sans SC", "PingFang SC", var(--font-display);
+  letter-spacing: normal;
 }
-
 :lang(ja) h1,
 :lang(ja) h2,
 :lang(ja) h3 {
-  font-family: "Noto Serif JP", var(--font-display);
+  font-family: "Noto Sans JP", "Hiragino Sans", var(--font-display);
+  letter-spacing: normal;
 }

@@ -43,8 +43,8 @@ export function TreeLayer() {
       const icon = L.divIcon({
         html: treeGlyph(seededRotation(id)),
         className: "oasyn-glyph",
-        iconSize: [22, 22],
-        iconAnchor: [11, 11],
+        iconSize: [20, 20],
+        iconAnchor: [10, 10],
       });
       L.marker(ll, { icon, interactive: false }).addTo(group);
     });

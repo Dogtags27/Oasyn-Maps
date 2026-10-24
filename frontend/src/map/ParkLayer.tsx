@@ -19,16 +19,16 @@ export function ParkLayer() {
     if (!map || !parks) return;
     const group = L.layerGroup().addTo(map);
     const necklace = resolveVar("var(--necklace)");
-    const ink = resolveVar("var(--ink)");
 
     for (const f of parks.features) {
       const ring = polygonLatLngs(f);
       if (!ring) continue;
       L.polygon(ring, {
-        color: ink,
+        color: necklace,
         weight: 1.5,
+        opacity: 0.8,
         fillColor: necklace,
-        fillOpacity: 0.18,
+        fillOpacity: 0.16,
         // Leaflet has no native hatch; the low-opacity fill + dashed outline
         // reads as a park without mimicking a solid heat area.
         dashArray: "4 4",

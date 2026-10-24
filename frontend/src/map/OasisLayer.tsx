@@ -14,7 +14,7 @@ import { coolingGlyph, waterGlyph } from "./glyphs";
 function makeIcon(html: string): L.DivIcon {
   return L.divIcon({
     html,
-    className: "oasyn-glyph",
+    className: "oasyn-glyph oasyn-glyph--oasis",
     iconSize: [28, 28],
     iconAnchor: [14, 14],
   });
