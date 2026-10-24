@@ -23,6 +23,8 @@ import { edgeTime } from "../core/cost.js";
 import { noPath as noPathDesc, warnSafetyMaskDropped } from "../core/descriptors.js";
 import { viaStops } from "../core/cooling.js";
 import { loadResources } from "./resources.js";
+import { LRU } from "../cache.js";
+import { hashKey } from "../hash.js";
 import type { Offer } from "../../contract/schemas.js";
 import { zodToApiError, sendError } from "./error.js";
 
@@ -89,6 +91,10 @@ function toRouteResult(
 /** Factory: returns a POST /api/plan handler bound to the loaded snapshot. */
 export function makePlanRoute(snap: Snapshot) {
   const graph: GraphView = buildGraphView(snap);
+  // Plan-result LRU keyed by hash(scenario, from, to, mode) (R15.1). Caches the
+  // serialised PlanResponse so a repeated interactive request is near-instant.
+  const resultCache = new LRU<unknown>();
+
   return async (req: Request, res: Response): Promise<void> => {
     const parsed = PlanRequest.safeParse(req.body);
     if (!parsed.success) {
@@ -98,6 +104,16 @@ export function makePlanRoute(snap: Snapshot) {
     }
     try {
       const { from, to, mode, scenario } = parsed.data;
+
+      const cacheKey = hashKey("plan", mode, from, to, scenario);
+      const cached = resultCache.get(cacheKey);
+      if (cached !== undefined) {
+        res.setHeader("Server-Timing", "cache;desc=hit");
+        res.json(cached);
+        return;
+      }
+
+      const t0 = performance.now();
       const resolved = resolveScenario(scenario);
       const out = plan({ snap, graph, scenario: resolved, zones: scenario.zones, mode, from, to });
 
@@ -145,6 +161,9 @@ export function makePlanRoute(snap: Snapshot) {
 
       // Validate the response in dev to catch contract drift early (R13.2).
       const checked = isDev ? PlanResponse.parse(body) : body;
+      resultCache.set(cacheKey, checked);
+      const computeMs = performance.now() - t0;
+      res.setHeader("Server-Timing", `compute;dur=${computeMs.toFixed(1)}`);
       res.json(checked);
     } catch (err) {
       sendError(res, err);

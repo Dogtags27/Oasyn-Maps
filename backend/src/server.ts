@@ -28,6 +28,8 @@ import { getConfig } from "./routes/config.js";
 import { makeLayersRoute } from "./routes/layers.js";
 import { makePlanRoute } from "./routes/plan.js";
 import { makeReplanRoute } from "./routes/replan.js";
+import { makeCoverageRoute } from "./routes/coverage.js";
+import { makeDepartureRoute } from "./routes/departure.js";
 import { postBody } from "./routes/body.js";
 import { postEscalationStep } from "./routes/escalation.js";
 import type { Snapshot } from "./snapshot.js";
@@ -130,12 +132,14 @@ export function createServer(snapshot?: Snapshot) {
     // Real engine endpoints (no stub header).
     app.post("/api/plan", makePlanRoute(snapshot));
     app.post("/api/replan", makeReplanRoute(snapshot));
+    app.post("/api/coverage", makeCoverageRoute(snapshot));
+    app.post("/api/departure", makeDepartureRoute(snapshot));
   } else {
     post("/api/plan", PlanRequest, "plan");
     post("/api/replan", ReplanRequest, "replan");
+    post("/api/coverage", CoverageRequest, "coverage");
+    post("/api/departure", DepartureRequest, "departure");
   }
-  post("/api/coverage", CoverageRequest, "coverage");
-  post("/api/departure", DepartureRequest, "departure");
 
   // --- Fallthrough -----------------------------------------------------------
 

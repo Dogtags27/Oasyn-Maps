@@ -16,7 +16,8 @@
     "fixtures": "node -e \"console.error('fixtures: live-engine fixture generation lands in Hour 6 (task 30)'); process.exit(1)\"",
     "build-data": "node scripts/build-data.mjs",
     "verify-snapshot": "node scripts/verify-snapshot.mjs",
-    "plan-cli": "node -e \"console.error('plan-cli: headless runner lands in Hour 5 (task 28)'); process.exit(1)\"",
+    "perf-check": "tsx scripts/perf-check.mjs",
+    "plan-cli": "tsx scripts/plan-cli.mjs",
     "lint:nohardcode": "tsx scripts/lint-nohardcode.mjs",
     "i18n:check": "tsx scripts/i18n-check.mjs"
   },
